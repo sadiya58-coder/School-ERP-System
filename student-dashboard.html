@@ -1,0 +1,1747 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Student Dashboard – EduCore ERP</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    .chat-window{height:260px;overflow-y:auto;display:flex;flex-direction:column;gap:10px;padding:12px;background:var(--bg);border-radius:var(--radius-sm);margin-bottom:12px;}
+    .msg{max-width:70%;padding:10px 14px;border-radius:14px;font-size:0.88rem;line-height:1.5;}
+    .msg.sent{align-self:flex-end;background:var(--primary);color:#fff;border-bottom-right-radius:4px;}
+    .msg.recv{align-self:flex-start;background:#fff;border:1px solid var(--border);border-bottom-left-radius:4px;}
+    .msg-meta{font-size:0.7rem;opacity:0.6;margin-top:4px;}
+    .chat-input-row{display:flex;gap:10px;}
+    .chat-input-row input{flex:1;}
+    .assign-card{background:var(--bg-white);border-radius:14px;padding:20px;border:1.5px solid var(--border);margin-bottom:14px;transition:all 0.2s;}
+    .assign-card:hover{border-color:var(--primary);box-shadow:var(--shadow);}
+    .assign-card .ac-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;}
+    .assign-card .ac-title{font-weight:600;color:var(--primary);font-size:0.95rem;}
+    .assign-card .ac-meta{font-size:0.8rem;color:var(--text-muted);margin-top:4px;}
+    .fee-banner{background:linear-gradient(135deg,var(--success),#1a9e50);color:#fff;border-radius:16px;padding:24px 28px;display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;}
+    .fee-banner.pending{background:linear-gradient(135deg,var(--danger),#c0392b);}
+    .fee-banner h3{font-family:var(--font-display);font-size:1.3rem;margin-bottom:4px;}
+    .fee-banner p{opacity:0.85;font-size:0.88rem;}
+    .mark-table-wrap table{font-size:0.88rem;}
+    .mark-table-wrap thead th{background:var(--primary);color:#fff;padding:10px 14px;}
+    .mark-table-wrap tbody td{padding:10px 14px;}
+    .progress-bar-wrap{background:var(--bg);border-radius:50px;height:8px;margin-top:6px;}
+    .progress-bar{height:8px;border-radius:50px;background:linear-gradient(90deg,var(--primary),var(--accent));}
+
+    /* ── Profile System ────────────────────────────── */
+    .profile-modal-overlay{position:fixed;inset:0;background:rgba(10,20,40,.55);backdrop-filter:blur(4px);z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;visibility:hidden;transition:opacity .25s,visibility .25s;}
+    .profile-modal-overlay.open{opacity:1;visibility:visible;}
+    .profile-modal{background:#fff;border-radius:20px;width:100%;max-width:820px;max-height:90vh;overflow:hidden;display:flex;flex-direction:column;transform:translateY(20px) scale(.97);transition:transform .25s;box-shadow:0 24px 80px rgba(26,60,94,.22);}
+    .profile-modal-overlay.open .profile-modal{transform:translateY(0) scale(1);}
+    .pm-header{display:flex;align-items:center;justify-content:space-between;padding:20px 28px;border-bottom:1.5px solid var(--border);background:linear-gradient(135deg,var(--primary) 0%,#2a5298 100%);}
+    .pm-header-title{font-family:var(--font-display);font-size:1.25rem;color:#fff;font-weight:700;}
+    .pm-close{background:rgba(255,255,255,.18);border:none;border-radius:50%;width:36px;height:36px;cursor:pointer;color:#fff;font-size:1.2rem;display:flex;align-items:center;justify-content:center;transition:background .2s;}
+    .pm-close:hover{background:rgba(255,255,255,.32);}
+    .pm-tabs{display:flex;align-items: center;justify-content: center; gap:0;border-bottom:1.5px solid var(--border);background:#fafbfc;padding:15px 20px;overflow:hidden;}
+    .pm-tab{justify-content: center; padding:10px 20px;font-size:.87rem;font-weight:600;color:var(--text-muted);border:none;background:none;cursor:pointer;border-bottom:5px solid transparent;transition:color .2s,border-color .2s;white-space:nowrap;}
+    .pm-tab.active{color:var(--primary);border-bottom-color:var(--primary);}
+    .pm-tab:hover:not(.active){color:var(--text);}
+    .pm-body{flex:1;overflow-y:auto;padding:28px;}
+    .pm-tab-pane{display:none;}
+    .pm-tab-pane.active{display:block;}
+    .pm-footer{padding:16px 28px;border-top:1.5px solid var(--border);display:flex;justify-content:flex-end;gap:10px;background:#fafbfc;}
+    .pm-save-btn{background:var(--primary);color:#fff;border:none;border-radius:10px;padding:10px 22px;font-size:.9rem;font-weight:600;cursor:pointer;font-family:var(--font-body);transition:background .2s;}
+    .pm-save-btn:hover{background:#15375e;}
+    .avatar-upload-area{display:flex;align-items:center;gap:28px;margin-bottom:28px;padding:20px;background:var(--bg);border-radius:14px;}
+    .avatar-preview{width:100px;height:100px;border-radius:50%;border:3px solid var(--primary);background:#e8edf5;display:flex;align-items:center;justify-content:center;font-size:2.8rem;flex-shrink:0;overflow:hidden;position:relative;}
+    .avatar-preview img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;}
+    .avatar-btns{display:flex;flex-direction:column;gap:10px;}
+    .btn-upload{display:flex;align-items:center;gap:8px;padding:9px 16px;border:1.5px solid var(--primary);border-radius:8px;color:var(--primary);font-size:.85rem;font-weight:600;cursor:pointer;background:#fff;transition:all .2s;font-family:var(--font-body);}
+    .btn-upload:hover{background:var(--primary);color:#fff;}
+    .btn-cam{display:flex;align-items:center;gap:8px;padding:9px 16px;border:1.5px solid var(--border);border-radius:8px;color:var(--text);font-size:.85rem;font-weight:600;cursor:pointer;background:#fff;transition:all .2s;font-family:var(--font-body);}
+    .btn-cam:hover{border-color:var(--primary);color:var(--primary);}
+    .camera-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:1100;display:flex;align-items:center;justify-content:center;opacity:0;visibility:hidden;transition:opacity .2s;}
+    .camera-modal-overlay.open{opacity:1;visibility:visible;}
+    .camera-modal{background:#111;border-radius:16px;padding:24px;text-align:center;max-width:440px;width:90%;}
+    .camera-modal video{width:100%;border-radius:10px;margin-bottom:14px;max-height:300px;object-fit:cover;}
+    .camera-modal canvas{display:none;}
+    .chip-list{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;}
+    .chip{display:flex;align-items:center;gap:6px;padding:5px 12px;background:rgba(26,60,94,.08);border-radius:20px;font-size:.83rem;color:var(--primary);font-weight:500;border:1px solid rgba(26,60,94,.14);}
+    .topbar-avatar{cursor:pointer;transition:transform .15s;border-radius:50%;}
+    .topbar-avatar:hover{transform:scale(1.08);box-shadow:0 0 0 3px rgba(26,60,94,.18);}
+    .profile-dropdown{position:absolute;right:0;top:calc(100% + 12px);background:#fff;border:1.5px solid var(--border);border-radius:14px;min-width:210px;box-shadow:0 8px 32px rgba(26,60,94,.15);opacity:0;visibility:hidden;transform:translateY(-8px);transition:all .2s;z-index:200;overflow:hidden;}
+    .profile-dropdown.open{opacity:1;visibility:visible;transform:translateY(0);}
+    .pd-user{padding:14px 16px;border-bottom:1px solid var(--border);background:var(--bg);}
+    .pd-user-name{font-weight:700;font-size:.95rem;color:var(--primary);}
+    .pd-user-role{font-size:.78rem;color:var(--text-muted);margin-top:2px;}
+    .pd-item{display:flex;align-items:center;gap:10px;padding:11px 16px;font-size:.88rem;color:var(--text);cursor:pointer;transition:background .15s;border:none;background:none;width:100%;text-align:left;font-family:var(--font-body);}
+    .pd-item:hover{background:var(--bg);}
+    .pd-item.danger{color:var(--danger);}
+    .prof-preview-card{background:linear-gradient(145deg,#f0f5ff 0%,#fff 60%);border:1.5px solid rgba(26,60,94,.12);border-radius:18px;overflow:hidden;}
+    .ppc-banner{height:90px;background:linear-gradient(135deg,var(--primary) 0%,#2a5298 60%,#1a8fd1 100%);position:relative;}
+    .ppc-banner-pattern{position:absolute;inset:0;opacity:.12;background-image:repeating-linear-gradient(45deg,#fff 0,#fff 1px,transparent 0,transparent 50%);background-size:12px 12px;}
+    .ppc-avatar-wrap{position:absolute;bottom:-40px;left:28px;width:80px;height:80px;border-radius:50%;border:4px solid #fff;background:#e8edf5;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:2rem;box-shadow:0 4px 16px rgba(26,60,94,.18);}
+    .ppc-avatar-wrap img{width:100%;height:100%;object-fit:cover;display:block;}
+    .ppc-main{padding:52px 28px 24px;}
+    .ppc-name{font-family:var(--font-display);font-size:1.4rem;color:var(--primary);font-weight:700;}
+    .ppc-designation{font-size:.88rem;color:var(--text-muted);margin-top:3px;}
+    .ppc-grid{display:grid;grid-template-columns:1fr 1fr;gap:0;margin-top:20px;border:1px solid var(--border);border-radius:12px;overflow:hidden;}
+    .ppc-field{padding:13px 16px;border-bottom:1px solid var(--border);border-right:1px solid var(--border);}
+    .ppc-field:nth-child(even){border-right:none;}
+    .ppc-field:nth-last-child(-n+2){border-bottom:none;}
+    .ppc-field-label{font-size:.72rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;font-weight:600;margin-bottom:3px;}
+    .ppc-field-val{font-size:.88rem;color:var(--text);font-weight:500;}
+    .ppc-field-val.empty{color:var(--text-muted);font-style:italic;font-weight:400;}
+    .ppc-section{margin-top:20px;}
+    .ppc-section-title{font-weight:700;color:var(--primary);font-size:.88rem;margin-bottom:10px;text-transform:uppercase;letter-spacing:.5px;}
+    .ppc-bio{font-size:.88rem;color:var(--text);line-height:1.7;padding:14px 16px;background:rgba(26,60,94,.04);border-radius:10px;border-left:3px solid var(--primary);}
+    .subj-perf-bar-wrap{background:var(--bg);border-radius:50px;height:7px;margin-top:4px;}
+    .subj-perf-bar{height:7px;border-radius:50px;background:linear-gradient(90deg,var(--primary),var(--accent));}
+
+    /* ══ TIMETABLE ═════════════════════════════════════════ */
+    /* ═════════ TIMETABLE CLEAN UI ═════════ */
+
+.tt-section-header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin-bottom:20px;
+  flex-wrap:wrap;
+  gap:10px;
+}
+
+.tt-section-header h2{
+  font-size:1.3rem;
+  font-weight:700;
+  color:#173b63;
+  margin:0;
+}
+
+.tt-class-badge{
+  background:#1b3f6b;
+  color:#fff;
+  padding:8px 18px;
+  border-radius:30px;
+  font-size:.85rem;
+  font-weight:600;
+}
+
+.tt-today-chip{
+  background:#edf4fb;
+  color:#1b3f6b;
+  border:1px solid #cfe0f2;
+  padding:7px 16px;
+  border-radius:30px;
+  font-size:.82rem;
+  font-weight:600;
+}
+
+.timetable-wrapper{
+  overflow-x:auto;
+  border-radius:18px;
+  border:1px solid #dde4ec;
+}
+
+.timetable-table{
+  width:100%;
+  border-collapse:collapse;
+  min-width:850px;
+  background:#fff;
+}
+
+.timetable-table thead th{
+  background:#173b63;
+  color:#fff;
+  padding:18px 10px;
+  text-align:center;
+  font-size:.9rem;
+  font-weight:700;
+  border:1px solid #264a72;
+}
+
+.timetable-table thead th:first-child{
+  width:140px;
+}
+
+.timetable-table .lunch-header{
+  background:#efe3cf;
+  color:#b45309;
+}
+
+.period-time{
+  display:block;
+  margin-top:6px;
+  font-size:.78rem;
+  opacity:.85;
+  font-weight:500;
+}
+
+.timetable-table td{
+  padding:14px 10px;
+  text-align:center;
+  border:1px solid #e5e7eb;
+  font-size:.93rem;
+  color:#1a2f4a;
+  background:#fff;
+}
+
+.timetable-table td:first-child{
+  font-weight:700;
+  background:#f9fafb;
+  color:#173b63;
+}
+
+.timetable-table tbody tr:hover td{
+  background:#f5f8fc;
+}
+
+.timetable-table tbody tr:hover td:first-child{
+  background:#eef2f8;
+}
+
+.timetable-table tbody tr.today-row td{
+  background:#f5f8fc;
+}
+
+.timetable-table tbody tr.today-row td:first-child{
+  color:#173b63;
+  background:#eef2f8;
+}
+
+.lunch-cell{
+  background:#f6efe4 !important;
+  color:#ea580c !important;
+  font-weight:700;
+}
+
+.tt-cell{
+  background:none;
+  border:none;
+  padding:0;
+  font-size:.93rem;
+  font-weight:400;
+  color:#1a2f4a;
+}
+
+    /* ══ HOLIDAY CALENDAR ══════════════════════════════════ */
+    .cal-card{background:#fff;border-radius:16px;padding:26px;box-shadow:0 2px 12px rgba(26,60,94,.08);border:1.5px solid #e8edf5;margin-top:24px;}
+    .cal-title{font-family:var(--font-display,serif);font-size:1.2rem;font-weight:800;color:#1a3c5e;}
+    .cal-grid-wrap{display:grid;grid-template-columns:1fr 1fr;gap:30px;align-items:start;}
+    @media(max-width:680px){.cal-grid-wrap{grid-template-columns:1fr;}}
+    .cal-nav-btn{width:34px;height:34px;border:1.5px solid #dde3ec;border-radius:9px;background:#fff;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;color:#1a3c5e;font-weight:700;}
+    .cal-nav-btn:hover{background:#f0f4f9;}
+    #stuCalGrid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;}
+    .cal-day-labels{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:5px;}
+    .cal-day-label{text-align:center;font-size:.71rem;font-weight:700;padding:4px 0;}
+    .cal-day-cell{text-align:center;padding:7px 2px;border-radius:8px;font-size:.8rem;font-weight:500;line-height:1.3;transition:transform .13s;cursor:default;position:relative;}
+    .cal-day-cell:hover{transform:scale(1.1);}
+    #stuCalHolList{max-height:265px;overflow-y:auto;}
+    #stuCalHolList::-webkit-scrollbar{width:4px;}
+    #stuCalHolList::-webkit-scrollbar-thumb{background:#c0ccda;border-radius:4px;}
+    .cal-hol-item{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:8px;margin-bottom:4px;font-size:.76rem;}
+    .cal-hol-date{min-width:42px;font-weight:700;}
+    .cal-hol-name{flex:1;font-weight:600;color:#1a3c5e;}
+    .cal-hol-badge{font-size:.64rem;padding:2px 7px;border-radius:20px;color:#fff;white-space:nowrap;}
+  </style>
+</head>
+<body>
+<div class="dashboard-layout">
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-logo">🎓 EduCore<span>ERP</span></div>
+  <div class="sidebar-user">
+    <div class="user-avatar" id="sidebarAvatar" onclick="openProfileModal()" title="Edit Profile" style="cursor:pointer;position:relative;overflow:hidden;">
+      <span id="sidebarAvatarEmoji" style="font-size:2rem;">👨‍🎓</span>
+      <img id="sidebarAvatarImg" src="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;position:absolute;top:0;left:0;display:none;" />
+    </div>
+    <div class="user-name" id="sidebarName">Student</div>
+    <div class="user-role" id="sidebarRole">Class 10 – A · Roll 1056</div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-section-label">Main</div>
+    <a href="#" class="active" data-section="dashboard"><span class="nav-icon">📊</span>Dashboard</a>
+    <a href="#" data-section="assignments"><span class="nav-icon">📝</span>Assignments</a>
+    <a href="#" data-section="timetable"><span class="nav-icon">📅</span>Timetable</a>
+    <a href="#" data-section="holidays"><span class="nav-icon">🗓</span>Holiday Calendar</a>
+    <a href="#" data-section="fees"><span class="nav-icon">💳</span>My Fees</a>
+    <a href="#" data-section="marksheet"><span class="nav-icon">📊</span>Marksheet</a>
+    <a href="#" data-section="idcard"><span class="nav-icon">🪪</span>ID / Admit Card</a>
+    <a href="#" data-section="bus"><span class="nav-icon">🚌</span>Bus Tracking</a>
+    <a href="#" data-section="chat"><span class="nav-icon">💬</span>Chat</a>
+    <a href="#" data-section="notifications"><span class="nav-icon">🔔</span>Notifications</a>
+  </nav>
+  <div class="sidebar-bottom"><a href="login.html" onclick="localStorage.clear()">🚪 Logout</a></div>
+</aside>
+<div class="main-content">
+  <div class="topbar">
+    <div class="topbar-left">
+      <button style="background:none;border:none;font-size:1.4rem;cursor:pointer" id="sidebarToggle">☰</button>
+      <span class="page-title" id="pageTitle">Student Dashboard</span>
+    </div>
+    <div class="topbar-right" style="position:relative">
+      <button class="notif-btn" id="notifBtn">🔔<span class="notif-badge">3</span></button>
+      <div class="topbar-avatar" id="topbarAvatar" title="My Profile" style="display:flex;align-items:center;justify-content:center;width:38px;height:38px;position:relative;">
+        <span id="topbarAvatarEmoji" style="font-size:1.5rem;line-height:1;">👨‍🎓</span>
+        <img id="topbarAvatarImg" src="" style="width:38px;height:38px;border-radius:50%;object-fit:cover;display:none;border:2px solid var(--primary);position:absolute;inset:0;" />
+      </div>
+      <div class="profile-dropdown" id="profileDropdown">
+        <div class="pd-user">
+          <div class="pd-user-name" id="pdName">Student</div>
+          <div class="pd-user-role" id="pdRole">Class 10 – A</div>
+        </div>
+        <button class="pd-item" onclick="openProfileModal()">👤 My Profile</button>
+        <button class="pd-item" onclick="openProfileModal('tab-academic')">📚 Academic Info</button>
+        <button class="pd-item" onclick="openProfileModal('tab-preview');renderProfilePreview()">👁 View Profile</button>
+        <button class="pd-item danger" onclick="localStorage.clear();window.location.href='login.html'">🚪 Logout</button>
+      </div>
+      <div class="notif-panel" id="notifPanel">
+        <div class="notif-panel-header" style="display:flex;align-items:center;justify-content:space-between;">
+          <span>Notifications</span>
+          <button onclick="markAllRead()" id="markAllReadBtn" style="background:none;border:none;font-size:.78rem;font-weight:600;color:var(--primary);cursor:pointer;padding:3px 8px;border-radius:6px;font-family:var(--font-body);transition:background .15s;" onmouseover="this.style.background='var(--bg)'" onmouseout="this.style.background='none'">Read All</button>
+        </div>
+        <div id="notifItemsContainer">
+          <div class="notif-item"><span class="ni-icon">📝</span><div><div class="ni-text">Math assignment due in 2 days</div><div class="ni-time">1 hr ago</div></div></div>
+          <div class="notif-item"><span class="ni-icon">💳</span><div><div class="ni-text">Fee receipt generated for April</div><div class="ni-time">Yesterday</div></div></div>
+          <div class="notif-item"><span class="ni-icon">🏫</span><div><div class="ni-text">Final exam timetable released</div><div class="ni-time">2 days ago</div></div></div>
+        </div>
+        <div id="notifEmptyMsg" style="display:none;text-align:center;padding:20px 10px;color:#aab4c2;font-size:.82rem;">All caught up! No new notifications.</div>
+      </div>
+    </div>
+  </div>
+  <div class="page-content">
+
+    <!-- =================== DASHBOARD =================== -->
+    <div id="section-dashboard">
+      <div class="stat-cards">
+        <div class="stat-card"><div class="stat-card-icon blue">📖</div><div class="stat-card-info"><div class="sc-val">4</div><div class="sc-label">Due Assignments</div><div class="sc-trend dn">2 due soon</div></div></div>
+        <div class="stat-card"><div class="stat-card-icon green">💳</div><div class="stat-card-info"><div class="sc-val">Paid</div><div class="sc-label">Fee Status</div><div class="sc-trend up">April 2025</div></div></div>
+        <div class="stat-card"><div class="stat-card-icon gold">📊</div><div class="stat-card-info"><div class="sc-val">A+</div><div class="sc-label">Last Result</div><div class="sc-trend up">91% overall</div></div></div>
+        <div class="stat-card"><div class="stat-card-icon red">🔔</div><div class="stat-card-info"><div class="sc-val">3</div><div class="sc-label">Notifications</div></div></div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px">
+        <div class="card">
+          <div class="card-header"><span class="card-title">Upcoming Assignments</span></div>
+          <div style="display:flex;flex-direction:column;gap:12px">
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:12px;background:var(--bg);border-radius:10px">
+              <div><div style="font-weight:600;font-size:0.88rem">📐 Quadratic Equations</div><div style="font-size:0.78rem;color:var(--text-muted)">Mathematics · Due: May 10</div></div>
+              <span class="badge badge-warning">2 days</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:12px;background:var(--bg);border-radius:10px">
+              <div><div style="font-weight:600;font-size:0.88rem">🔬 Photosynthesis Lab</div><div style="font-size:0.78rem;color:var(--text-muted)">Science · Due: May 12</div></div>
+              <span class="badge badge-info">4 days</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:12px;background:var(--bg);border-radius:10px">
+              <div><div style="font-weight:600;font-size:0.88rem">📖 Essay Writing</div><div style="font-size:0.78rem;color:var(--text-muted)">English · Due: May 8</div></div>
+              <span class="badge badge-danger">Today</span>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><span class="card-title">Subject Performance</span></div>
+          <div style="display:flex;flex-direction:column;gap:14px">
+            <div><div style="display:flex;justify-content:space-between;font-size:0.85rem;margin-bottom:4px"><span>Mathematics</span><strong>88%</strong></div><div class="progress-bar-wrap"><div class="progress-bar" style="width:88%"></div></div></div>
+            <div><div style="display:flex;justify-content:space-between;font-size:0.85rem;margin-bottom:4px"><span>Science</span><strong>91%</strong></div><div class="progress-bar-wrap"><div class="progress-bar" style="width:91%"></div></div></div>
+            <div><div style="display:flex;justify-content:space-between;font-size:0.85rem;margin-bottom:4px"><span>English</span><strong>79%</strong></div><div class="progress-bar-wrap"><div class="progress-bar" style="width:79%"></div></div></div>
+            <div><div style="display:flex;justify-content:space-between;font-size:0.85rem;margin-bottom:4px"><span>Hindi</span><strong>85%</strong></div><div class="progress-bar-wrap"><div class="progress-bar" style="width:85%"></div></div></div>
+            <div><div style="display:flex;justify-content:space-between;font-size:0.85rem;margin-bottom:4px"><span>Social Science</span><strong>82%</strong></div><div class="progress-bar-wrap"><div class="progress-bar" style="width:82%"></div></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- =================== ASSIGNMENTS =================== -->
+    <div id="section-assignments" class="hidden">
+      <div style="display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap">
+        <div class="search-box"><span>🔍</span><input type="text" placeholder="Search assignments…" id="assignSearch" oninput="filterAssign()"/></div>
+        <select class="form-control" style="width:160px" id="assignFilter" onchange="filterAssign()">
+          <option value="">All Subjects</option>
+          <option>Mathematics</option><option>Science</option><option>English</option><option>Hindi</option><option>History</option>
+        </select>
+      </div>
+      <div id="assignCards">
+        <div class="assign-card" data-subj="Mathematics">
+          <div class="ac-header"><div><div class="ac-title">📐 Quadratic Equations – Chapter 5</div><div class="ac-meta">Mathematics · Teacher: Meera Joshi · Due: May 10, 2025</div></div><span class="badge badge-warning">Due Soon</span></div>
+          <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:12px">Solve problems from exercise 5.3 and 5.4. Show all steps.</p>
+          <button class="btn-secondary" style="font-size:0.82rem">⬇ Download PDF</button>
+        </div>
+        <div class="assign-card" data-subj="Science">
+          <div class="ac-header"><div><div class="ac-title">🔬 Photosynthesis Lab Report</div><div class="ac-meta">Science · Teacher: Rahul Nair · Due: May 12, 2025</div></div><span class="badge badge-info">Active</span></div>
+          <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:12px">Write a detailed lab report on the experiment conducted on April 28.</p>
+          <button class="btn-secondary" style="font-size:0.82rem">⬇ Download PDF</button>
+        </div>
+        <div class="assign-card" data-subj="English">
+          <div class="ac-header"><div><div class="ac-title">📖 Essay: My Favourite Season</div><div class="ac-meta">English · Teacher: Sunita Rao · Due: May 8, 2025</div></div><span class="badge badge-danger">Overdue</span></div>
+          <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:12px">Write a 500-word essay. Use descriptive language and examples.</p>
+          <button class="btn-secondary" style="font-size:0.82rem">⬇ Download PDF</button>
+        </div>
+        <div class="assign-card" data-subj="History">
+          <div class="ac-header"><div><div class="ac-title">🏛️ Project: Mughal Empire</div><div class="ac-meta">History · Teacher: Deepa Menon · Due: May 20, 2025</div></div><span class="badge badge-success">Active</span></div>
+          <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:12px">Create a 10-page project on the Mughal dynasty with maps and timelines.</p>
+          <button class="btn-secondary" style="font-size:0.82rem">⬇ Download PDF</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- =================== FEES =================== -->
+    <div id="section-fees" class="hidden">
+      <!-- Dynamic Fee Banner -->
+      <div id="feeBanner" class="fee-banner">
+        <div>
+          <h3 id="feeBannerTitle">💳 Loading Fee Status…</h3>
+          <p id="feeBannerSub">Please wait…</p>
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+          <button id="btnPayFull" onclick="openPayModal('full')" style="display:none;background:rgba(255,255,255,0.95);color:#1a3c5e;border:none;padding:10px 22px;border-radius:50px;cursor:pointer;font-weight:700;font-size:0.9rem">💰 Pay Full Fee</button>
+          <button id="btnPayPartial" onclick="openPayModal('partial')" style="display:none;background:rgba(255,255,255,0.25);color:#fff;border:2px solid rgba(255,255,255,0.6);padding:10px 22px;border-radius:50px;cursor:pointer;font-weight:600;font-size:0.9rem">💳 Pay Partial</button>
+          <button onclick="stuDownloadReceipt()" style="background:rgba(255,255,255,0.15);color:#fff;border:2px solid rgba(255,255,255,0.4);padding:10px 22px;border-radius:50px;cursor:pointer;font-weight:600;font-size:0.9rem">⬇ Download Receipt</button>
+        </div>
+      </div>
+
+      <!-- Fee Summary Cards -->
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px;">
+        <div class="card" style="text-align:center;padding:20px;">
+          <div style="font-size:1.6rem;font-weight:900;color:var(--primary)" id="fsTotalDue">₹—</div>
+          <div style="font-size:0.8rem;color:var(--text-muted);margin-top:4px">Total Annual Fee</div>
+        </div>
+        <div class="card" style="text-align:center;padding:20px;">
+          <div style="font-size:1.6rem;font-weight:900;color:var(--success)" id="fsTotalPaid">₹—</div>
+          <div style="font-size:0.8rem;color:var(--text-muted);margin-top:4px">Amount Paid</div>
+        </div>
+        <div class="card" style="text-align:center;padding:20px;">
+          <div style="font-size:1.6rem;font-weight:900;color:var(--danger)" id="fsBalance">₹—</div>
+          <div style="font-size:0.8rem;color:var(--text-muted);margin-top:4px">Balance Pending</div>
+        </div>
+      </div>
+
+      <!-- Fee History Table -->
+      <div class="card">
+        <div class="card-header"><span class="card-title">Fee History</span><span id="feeStatusBadge" class="badge badge-warning">Loading…</span></div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Receipt#</th><th>Term</th><th>Amount</th><th>Date</th><th>Mode</th><th>Status</th><th>Action</th></tr></thead>
+            <tbody id="stuFeeTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Pay Fee Modal ── -->
+    <div style="position:fixed;inset:0;background:rgba(10,20,40,.55);backdrop-filter:blur(4px);z-index:999;display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;visibility:hidden;transition:opacity .2s,visibility .2s;" id="payModalOverlay">
+      <div style="background:#fff;border-radius:18px;width:100%;max-width:440px;padding:28px;box-shadow:0 20px 70px rgba(26,60,94,.22);">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+          <div style="font-family:var(--font-display);font-size:1.15rem;color:var(--primary);font-weight:700;" id="payModalTitle">💰 Pay Fee</div>
+          <button onclick="closePayModal()" style="background:none;border:none;font-size:1.3rem;cursor:pointer;color:var(--text-muted);">✕</button>
+        </div>
+        <div class="form-group"><label>Term / Period</label><input class="form-control" id="pmTerm" placeholder="e.g. July 2025"/></div>
+        <div class="form-group"><label>Amount (₹)</label><input class="form-control" id="pmAmount" type="number" placeholder="5000"/></div>
+        <div class="form-group"><label>Payment Mode</label>
+          <select class="form-control" id="pmMode">
+            <option>Online</option><option>Cash</option><option>Cheque</option><option>UPI</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Note (optional)</label><input class="form-control" id="pmNote" placeholder="e.g. Term 1 tuition fee"/></div>
+        <div style="display:flex;gap:10px;margin-top:6px;">
+          <button onclick="closePayModal()" style="flex:1;padding:11px;border:1.5px solid var(--border);border-radius:10px;background:#fff;cursor:pointer;font-size:.9rem;font-weight:600;">Cancel</button>
+          <button onclick="submitFeePayment()" style="flex:1;padding:11px;background:var(--primary);color:#fff;border:none;border-radius:10px;cursor:pointer;font-size:.9rem;font-weight:700;">✓ Confirm Payment</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- =================== MARKSHEET =================== -->
+    <div id="section-marksheet" class="hidden">
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">My Marksheet – Final Exam 2025</span>
+          <button class="btn-secondary" onclick="downloadMarksheet()">⬇ Download PDF</button>
+        </div>
+        <div style="background:linear-gradient(135deg,var(--primary-dark),var(--primary));color:#fff;border-radius:14px;padding:20px 28px;margin-bottom:20px;display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <div style="font-size:0.75rem;letter-spacing:1.5px;text-transform:uppercase;opacity:0.7">EduCore School</div>
+            <div style="font-family:var(--font-display);font-size:1.4rem;margin:6px 0">Arjun Sharma</div>
+            <div style="font-size:0.85rem;opacity:0.75">Class 10 – A · Roll: 2024-1056 · Exam: Final 2025</div>
+          </div>
+          <div style="text-align:center">
+            <div style="font-family:var(--font-display);font-size:2.5rem;color:var(--accent)">A</div>
+            <div style="font-size:0.78rem;opacity:0.7">Overall Grade</div>
+          </div>
+        </div>
+        <div class="mark-table-wrap table-wrap">
+          <table>
+            <thead><tr><th>Subject</th><th>Max Marks</th><th>Marks Obtained</th><th>Percentage</th><th>Grade</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr><td>Mathematics</td><td>100</td><td>88</td><td>88%</td><td>A</td><td><span class="badge badge-success">Pass</span></td></tr>
+              <tr><td>Science</td><td>100</td><td>91</td><td>91%</td><td>A+</td><td><span class="badge badge-success">Pass</span></td></tr>
+              <tr><td>English</td><td>100</td><td>79</td><td>79%</td><td>B+</td><td><span class="badge badge-success">Pass</span></td></tr>
+              <tr><td>Hindi</td><td>100</td><td>85</td><td>85%</td><td>A</td><td><span class="badge badge-success">Pass</span></td></tr>
+              <tr><td>Social Science</td><td>100</td><td>82</td><td>82%</td><td>A</td><td><span class="badge badge-success">Pass</span></td></tr>
+              <tr style="background:rgba(26,60,94,0.05);font-weight:700"><td>Total</td><td>500</td><td>425</td><td>85%</td><td>A</td><td><span class="badge badge-success">Passed</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- =================== ID / ADMIT CARD =================== -->
+    <div id="section-idcard" class="hidden">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px">
+        <div class="card">
+          <div class="card-header"><span class="card-title">🪪 My Student ID Card</span><button class="btn-secondary" onclick="downloadStudIdCard()">⬇ Download</button></div>
+          <div style="background:linear-gradient(135deg,var(--primary-dark),var(--primary));color:#fff;border-radius:16px;padding:22px 26px;max-width:300px;margin:0 auto;position:relative;overflow:hidden">
+            <div style="position:absolute;right:-15px;top:-15px;font-size:6rem;opacity:0.06">🎓</div>
+            <div style="font-size:0.68rem;letter-spacing:2px;text-transform:uppercase;opacity:0.65">EduCore School — 2024–25</div>
+            <div style="display:flex;align-items:center;gap:14px;margin:14px 0">
+              <div style="width:52px;height:52px;background:rgba(255,255,255,0.15);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.6rem">👤</div>
+              <div>
+                <div style="font-family:var(--font-display);font-size:1.15rem" id="stuIdNameDisp">Arjun Sharma</div>
+                <span style="background:var(--accent);color:#fff;padding:2px 10px;border-radius:50px;font-size:0.68rem;font-weight:600">Student</span>
+              </div>
+            </div>
+            <div style="font-size:0.8rem;opacity:0.78;line-height:1.9">
+              📚 Class 10 – A<br>🔢 Roll: 2024-1056<br>📍 123 School Road, EduCity
+            </div>
+            <div style="margin-top:14px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.2);display:flex;justify-content:space-between;font-size:0.68rem;opacity:0.6">
+              <span>Valid: 2024–25</span><span>EduCore ERP</span>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><span class="card-title">📋 Admit Card</span><button class="btn-secondary" onclick="alert('Admit Card PDF downloaded!')">⬇ Download</button></div>
+          <div style="background:var(--bg);border-radius:14px;padding:22px;border:2px dashed var(--border)">
+            <div style="text-align:center;font-family:var(--font-display);font-size:1rem;color:var(--primary);margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--border)">
+              🏫 EduCore School<br><span style="font-size:0.82rem;font-weight:400;color:var(--text-muted)">Admit Card – Final Examination 2025</span>
+            </div>
+            <table style="width:100%;font-size:0.85rem">
+              <tr><td style="padding:7px 0;color:var(--text-muted)">Student Name</td><td style="font-weight:600">Arjun Sharma</td></tr>
+              <tr><td style="padding:7px 0;color:var(--text-muted)">Roll Number</td><td style="font-weight:600">2024-1056</td></tr>
+              <tr><td style="padding:7px 0;color:var(--text-muted)">Class</td><td style="font-weight:600">Class 10 – A</td></tr>
+              <tr><td style="padding:7px 0;color:var(--text-muted)">Exam Date</td><td style="font-weight:600">March 10–20, 2025</td></tr>
+              <tr><td style="padding:7px 0;color:var(--text-muted)">Exam Centre</td><td style="font-weight:600">Hall A – Room 201</td></tr>
+              <tr><td style="padding:7px 0;color:var(--text-muted)">Reporting Time</td><td style="font-weight:600">8:30 AM</td></tr>
+            </table>
+            <div style="margin-top:14px;padding:10px;background:rgba(231,76,60,0.06);border-radius:8px;font-size:0.78rem;color:var(--danger)">
+              ⚠️ Bring this card and school ID to all examinations. No entry without admit card.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- =================== BUS TRACKING =================== -->
+    <div id="section-bus" class="hidden">
+      <div class="card">
+        <div class="card-header"><span class="card-title">🚌 My School Bus – Route A</span><span class="badge badge-success">● Live</span></div>
+        <div style="height:260px;background:#dde8d8;border-radius:12px;position:relative;overflow:hidden;margin-bottom:16px">
+          <div style="position:absolute;inset:0;background-image:linear-gradient(rgba(100,140,100,0.2) 1px,transparent 1px),linear-gradient(90deg,rgba(100,140,100,0.2) 1px,transparent 1px);background-size:32px 32px"></div>
+          <div style="position:absolute;background:#c8c8c8;height:14px;left:0;right:0;top:42%"></div>
+          <div style="position:absolute;background:#c8c8c8;height:14px;left:0;right:0;top:70%"></div>
+          <div style="position:absolute;background:#c8c8c8;width:14px;top:0;bottom:0;left:35%"></div>
+          <div style="position:absolute;background:#c8c8c8;width:14px;top:0;bottom:0;left:60%"></div>
+          <div style="position:absolute;font-size:1.8rem;animation:busDrive 8s linear infinite">🚌</div>
+          <div style="position:absolute;top:60%;left:58%;font-size:1.4rem">🏫</div>
+          <div style="position:absolute;top:8px;left:8px;background:rgba(255,255,255,0.9);border-radius:10px;padding:8px 14px;font-size:0.8rem;font-weight:600;color:var(--primary)">
+            🚌 Bus #1 – Route A<br><span style="color:var(--success);font-size:0.75rem">● ETA: 8 min</span>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px">
+          <div style="background:var(--bg);border-radius:12px;padding:16px;text-align:center">
+            <div style="font-size:1.5rem;margin-bottom:6px">🚌</div>
+            <div style="font-weight:600;font-size:0.88rem;color:var(--primary)">Bus #1</div>
+            <div style="font-size:0.78rem;color:var(--text-muted)">Route A – Morning</div>
+          </div>
+          <div style="background:var(--bg);border-radius:12px;padding:16px;text-align:center">
+            <div style="font-size:1.5rem;margin-bottom:6px">👨‍✈️</div>
+            <div style="font-weight:600;font-size:0.88rem;color:var(--primary)">Ramesh Kumar</div>
+            <div style="font-size:0.78rem;color:var(--text-muted)">Driver</div>
+          </div>
+          <div style="background:var(--bg);border-radius:12px;padding:16px;text-align:center">
+            <div style="font-size:1.5rem;margin-bottom:6px">⏱️</div>
+            <div style="font-weight:600;font-size:0.88rem;color:var(--success)">ETA 8 min</div>
+            <div style="font-size:0.78rem;color:var(--text-muted)">Your stop: Stop 4</div>
+          </div>
+        </div>
+      </div>
+      <style>@keyframes busDrive{0%{top:40%;left:10%}25%{top:40%;left:55%}50%{top:67%;left:55%}75%{top:67%;left:10%}100%{top:40%;left:10%}}</style>
+    </div>
+
+    <!-- =================== CHAT =================== -->
+    <div id="section-chat" class="hidden">
+      <div style="display:grid;grid-template-columns:220px 1fr;gap:24px">
+        <div class="card" style="padding:16px">
+          <div class="card-title" style="margin-bottom:14px">My Teachers</div>
+          <div style="display:flex;flex-direction:column;gap:4px">
+            <div onclick="openStudChat('Meera Joshi','Math Teacher')" class="chat-contact active-contact" id="sc-Meera Joshi" style="padding:10px;border-radius:10px;cursor:pointer;background:var(--primary);color:#fff;font-size:0.88rem">👩‍🏫 Meera Joshi<div style="font-size:0.72rem;opacity:0.7">Mathematics</div></div>
+            <div onclick="openStudChat('Rahul Nair','Science Teacher')" id="sc-Rahul Nair" style="padding:10px;border-radius:10px;cursor:pointer;background:var(--bg);font-size:0.88rem">👨‍🏫 Rahul Nair<div style="font-size:0.72rem;color:var(--text-muted)">Science</div></div>
+            <div onclick="openStudChat('Sunita Rao','English Teacher')" id="sc-Sunita Rao" style="padding:10px;border-radius:10px;cursor:pointer;background:var(--bg);font-size:0.88rem">👩‍🏫 Sunita Rao<div style="font-size:0.72rem;color:var(--text-muted)">English</div></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <div><span class="card-title" id="studChatWith">Meera Joshi</span><div style="font-size:0.78rem;color:var(--text-muted)" id="studChatRole">Mathematics Teacher</div></div>
+            <span class="badge badge-success">● Online</span>
+          </div>
+          <div class="chat-window" id="studChatWindow">
+            <div class="msg recv">Hello Arjun! Do you have any doubts about today's lesson? <div class="msg-meta">9:00 AM</div></div>
+            <div class="msg sent">Ma'am, I had a doubt on Exercise 5.3 Q4. <div class="msg-meta">9:10 AM</div></div>
+            <div class="msg recv">Let me explain – it uses the discriminant formula. b²-4ac. Try with those values. <div class="msg-meta">9:12 AM</div></div>
+          </div>
+          <div class="chat-input-row">
+            <input class="form-control" id="studChatInput" placeholder="Type a message…"/>
+            <button class="btn-secondary" onclick="sendStudMsg()">Send</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- =================== NOTIFICATIONS =================== -->
+    <div id="section-notifications" class="hidden">
+      <div class="card">
+        <div class="card-header"><span class="card-title">All Notifications</span><span class="badge badge-info">3 new</span></div>
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <div style="background:rgba(243,156,18,0.08);border:1px solid rgba(243,156,18,0.2);border-radius:12px;padding:16px;display:flex;gap:14px">
+            <span style="font-size:1.5rem">📝</span>
+            <div><div style="font-weight:600;color:var(--accent)">Assignment Due Soon</div><div style="font-size:0.85rem;color:var(--text-muted);margin-top:4px">Math assignment (Quadratic Equations) is due in 2 days – May 10, 2025</div><div style="font-size:0.75rem;color:var(--text-muted);margin-top:6px">1 hour ago</div></div>
+          </div>
+          <div style="background:rgba(46,204,113,0.08);border:1px solid rgba(46,204,113,0.2);border-radius:12px;padding:16px;display:flex;gap:14px">
+            <span style="font-size:1.5rem">💳</span>
+            <div><div style="font-weight:600;color:var(--success)">Fee Receipt Generated</div><div style="font-size:0.85rem;color:var(--text-muted);margin-top:4px">Your fee receipt for April 2025 has been generated. Amount: ₹5,000</div><div style="font-size:0.75rem;color:var(--text-muted);margin-top:6px">Yesterday</div></div>
+          </div>
+          <div style="background:rgba(26,60,94,0.06);border:1px solid rgba(26,60,94,0.1);border-radius:12px;padding:16px;display:flex;gap:14px">
+            <span style="font-size:1.5rem">🏫</span>
+            <div><div style="font-weight:600;color:var(--primary)">Final Exam Timetable Released</div><div style="font-size:0.85rem;color:var(--text-muted);margin-top:4px">The final examination timetable for 2025 has been released. Check your admit card.</div><div style="font-size:0.75rem;color:var(--text-muted);margin-top:6px">2 days ago</div></div>
+          </div>
+          <div style="background:rgba(52,152,219,0.06);border:1px solid rgba(52,152,219,0.15);border-radius:12px;padding:16px;display:flex;gap:14px">
+            <span style="font-size:1.5rem">🎉</span>
+            <div><div style="font-weight:600;color:#1a7ab8">School Annual Day – May 25</div><div style="font-size:0.85rem;color:var(--text-muted);margin-top:4px">Annual Day celebrations on May 25. All students must wear formal uniform.</div><div style="font-size:0.75rem;color:var(--text-muted);margin-top:6px">3 days ago</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════ TIMETABLE ═══════════════════ -->
+    <div id="section-timetable" class="hidden">
+      <div class="card">
+        <div class="tt-section-header">
+          <h2>📅 My Class Timetable</h2>
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+            <span class="tt-class-badge" id="ttClassBadge">Class —</span>
+            <span class="tt-today-chip" id="ttTodayChip">Today: —</span>
+          </div>
+        </div>
+        <div class="timetable-wrapper">
+          <table class="timetable-table">
+            <thead>
+              <tr>
+                <th>Day</th>
+                <th>Period 1<span class="period-time">8:00–8:45</span></th>
+                <th>Period 2<span class="period-time">8:45–9:30</span></th>
+                <th>Period 3<span class="period-time">9:30–10:15</span></th>
+                <th class="lunch-header">Lunch<span class="period-time">10:15–10:45</span></th>
+                <th>Period 4<span class="period-time">10:45–11:30</span></th>
+                <th>Period 5<span class="period-time">11:30–12:15</span></th>
+                <th>Period 6<span class="period-time">12:15–1:00</span></th>
+              </tr>
+            </thead>
+            <tbody id="stuTimetableBody"></tbody>
+          </table>
+        </div>
+        <div id="ttNoClass" style="display:none;text-align:center;padding:30px;color:var(--text-muted,#8a9bb5);font-size:.9rem;">
+          <div style="font-size:2rem;margin-bottom:8px;">📚</div>
+          No class selected yet. <a href="#" onclick="openProfileModal('tab-academic')" style="color:var(--primary,#1a3c5e);font-weight:700;">Update your Academic Info</a> to see your timetable.
+        </div>
+        <div style="margin-top:16px;display:flex;gap:16px;flex-wrap:wrap;font-size:.76rem;color:var(--text-muted,#8a9bb5);">
+          
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════ HOLIDAY CALENDAR ═══════════════════ -->
+    <div id="section-holidays" class="hidden">
+      <div class="cal-card">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px;">
+          <div class="cal-title">Holiday Calendar</div>
+          
+        </div>
+        <div class="cal-grid-wrap">
+          <!-- Left: month calendar grid -->
+          <div>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+              <button class="cal-nav-btn" onclick="stuCalPrev()">❮</button>
+              <div id="stuCalHeading" style="font-weight:800;font-size:1rem;color:#1a3c5e;"></div>
+              <button class="cal-nav-btn" onclick="stuCalNext()">❯</button>
+            </div>
+            <div class="cal-day-labels">
+              <div class="cal-day-label" style="color:#e74c3c;">Sun</div>
+              <div class="cal-day-label" style="color:#6b7c93;">Mon</div>
+              <div class="cal-day-label" style="color:#6b7c93;">Tue</div>
+              <div class="cal-day-label" style="color:#6b7c93;">Wed</div>
+              <div class="cal-day-label" style="color:#6b7c93;">Thu</div>
+              <div class="cal-day-label" style="color:#6b7c93;">Fri</div>
+              <div class="cal-day-label" style="color:#1a8a4a;">Sat</div>
+            </div>
+            <div id="stuCalGrid"></div>
+          </div>
+          <!-- Right: holiday list -->
+          <div style="display:flex;flex-direction:column;min-height:300px;">
+            <div style="font-weight:700;font-size:.88rem;color:#1a3c5e;margin-bottom:10px;">Holidays this month</div>
+            <div id="stuCalHolList" style="flex:1;"></div>
+            <!-- legend -->
+            
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- ═══════════ STUDENT PROFILE MODAL ═══════════ -->
+<div class="profile-modal-overlay" id="profileModalOverlay">
+  <div class="profile-modal">
+    <div class="pm-header">
+      <div class="pm-header-title">👨‍🎓 Student Profile</div>
+      <button class="pm-close" onclick="closeProfileModal()">✕</button>
+    </div>
+    <div class="pm-tabs">
+      <button class="pm-tab active" data-tab="tab-basic" onclick="switchPmTab(this,'tab-basic')">Personal Info</button>
+      <button class="pm-tab" data-tab="tab-academic" onclick="switchPmTab(this,'tab-academic')">Academic Info</button>
+      <button class="pm-tab" data-tab="tab-family" onclick="switchPmTab(this,'tab-family')">Family & Transport</button>
+      <button class="pm-tab" data-tab="tab-preview" onclick="switchPmTab(this,'tab-preview');renderProfilePreview()">👁 View Profile</button>
+    </div>
+    <div class="pm-body">
+
+      <!-- TAB: PERSONAL INFO -->
+      <div class="pm-tab-pane active" id="tab-basic">
+        <div class="avatar-upload-area">
+          <div class="avatar-preview" id="pmAvatarPreview">
+            <span id="pmAvatarEmoji" style="font-size:2.8rem;position:relative;z-index:1;">👨‍🎓</span>
+            <img id="pmAvatarImg" src="" style="display:none;" />
+          </div>
+          <div>
+            <div style="font-weight:600;color:var(--primary);margin-bottom:6px;font-size:.92rem;">Profile Picture</div>
+            <div style="font-size:.8rem;color:var(--text-muted);margin-bottom:12px;">Upload from device or take a photo</div>
+            <div class="avatar-btns">
+              <label class="btn-upload">📁 Upload from Device<input type="file" id="avatarFileInput" accept="image/*" style="display:none;" onchange="handleAvatarUpload(event)"></label>
+              <button class="btn-cam" onclick="openCamera()">📷 Take a Photo</button>
+            </div>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Full Name *</label><input class="form-control" id="pf-name" placeholder="e.g. Arjun Sharma"/></div>
+          <div class="form-group"><label>Student ID / Roll No.</label><input class="form-control" id="pf-rollno" placeholder="e.g. 2024-1056"/></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Date of Birth</label><input class="form-control" id="pf-dob" type="date"/></div>
+          <div class="form-group"><label>Gender</label><select class="form-control" id="pf-gender"><option value="">— Select —</option><option>Male</option><option>Female</option><option>Non-binary</option><option>Prefer not to say</option></select></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Blood Group</label><select class="form-control" id="pf-blood"><option value="">— Select —</option><option>A+</option><option>A-</option><option>B+</option><option>B-</option><option>O+</option><option>O-</option><option>AB+</option><option>AB-</option></select></div>
+          <div class="form-group"><label>Nationality</label><input class="form-control" id="pf-nationality" placeholder="e.g. Indian"/></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Aadhar / ID No.</label><input class="form-control" id="pf-aadhar" placeholder="e.g. XXXX-XXXX-XXXX"/></div>
+          <div class="form-group"><label>Student Phone</label><input class="form-control" id="pf-phone" placeholder="+91 …"/></div>
+        </div>
+        <div class="form-group"><label>Residential Address</label><input class="form-control" id="pf-address" placeholder="Full home address…"/></div>
+        <div class="form-group"><label>Hobbies / Extra-curricular Activities</label><input class="form-control" id="pf-hobbies" placeholder="e.g. Cricket, Drawing, Debate Club…"/></div>
+        <div class="form-group"><label>About Me</label><textarea class="form-control" id="pf-bio" rows="3" placeholder="Brief about yourself…" style="resize:vertical;"></textarea></div>
+      </div>
+
+      <!-- TAB: ACADEMIC INFO -->
+      <div class="pm-tab-pane" id="tab-academic">
+        <div style="font-weight:700;color:var(--primary);font-size:1rem;margin-bottom:16px;">📚 Academic Details</div>
+        <div class="form-row">
+          <div class="form-group"><label>Class</label><select class="form-control" id="pf-class"><option value="">— Select —</option><option>Class 1</option><option>Class 2</option><option>Class 3</option><option>Class 4</option><option>Class 5</option><option>Class 6</option><option>Class 7</option><option>Class 8</option><option>Class 9</option><option>Class 10</option><option>Class 11</option><option>Class 12</option></select></div>
+          <div class="form-group"><label>Section</label><select class="form-control" id="pf-section"><option value="">— Select —</option><option>A</option><option>B</option><option>C</option><option>D</option></select></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Academic Year</label><input class="form-control" id="pf-acyear" placeholder="e.g. 2024-25"/></div>
+          <div class="form-group"><label>Admission Date</label><input class="form-control" id="pf-admission" type="date"/></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Class Teacher</label><input class="form-control" id="pf-classteacher" placeholder="e.g. Ms. Meera Joshi"/></div>
+          <div class="form-group"><label>House / Group</label><input class="form-control" id="pf-house" placeholder="e.g. Red House, Science Group"/></div>
+        </div>
+        <div style="margin-bottom:20px;">
+          <div style="font-weight:600;color:var(--primary);font-size:.9rem;margin-bottom:8px;">Subjects Enrolled</div>
+          <div class="chip-list" id="subjectChips"></div>
+          <div style="display:flex;gap:8px;margin-top:10px;">
+            <input class="form-control" id="subjectInput" placeholder="Add a subject e.g. Mathematics" style="max-width:280px;" onkeydown="if(event.key==='Enter')addSubjectChip()"/>
+            <button class="pm-save-btn" style="padding:9px 16px;font-size:.84rem;" onclick="addSubjectChip()">+ Add</button>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Previous School</label><input class="form-control" id="pf-prevschool" placeholder="Previous school name (if any)"/></div>
+          <div class="form-group"><label>Previous Class / Grade</label><input class="form-control" id="pf-prevclass" placeholder="e.g. Class 9, Grade A"/></div>
+        </div>
+        <div style="font-weight:700;color:var(--primary);font-size:.95rem;margin:16px 0 12px;">🏅 Subject-wise Performance</div>
+        <div id="perfRows" style="display:flex;flex-direction:column;gap:10px;"></div>
+        <button style="margin-top:10px;padding:8px 14px;border:1.5px dashed var(--primary);border-radius:8px;background:none;color:var(--primary);font-size:.83rem;font-weight:600;cursor:pointer;" onclick="addPerfRow()">+ Add Subject Score</button>
+      </div>
+
+      <!-- TAB: FAMILY & TRANSPORT -->
+      <div class="pm-tab-pane" id="tab-family">
+        <div style="font-weight:700;color:var(--primary);font-size:1rem;margin-bottom:16px;">👨‍👩‍👦 Parent / Guardian Info</div>
+        <div style="background:var(--bg);border-radius:12px;padding:16px;margin-bottom:20px;">
+          <div style="font-weight:600;font-size:.9rem;color:var(--primary);margin-bottom:12px;">Father's Details</div>
+          <div class="form-row">
+            <div class="form-group"><label>Father's Name</label><input class="form-control" id="pf-father-name" placeholder="e.g. Ramesh Sharma"/></div>
+            <div class="form-group"><label>Occupation</label><input class="form-control" id="pf-father-occ" placeholder="e.g. Engineer"/></div>
+          </div>
+          <div class="form-group"><label>Father's Phone</label><input class="form-control" id="pf-father-phone" placeholder="+91 …"/></div>
+        </div>
+        <div style="background:var(--bg);border-radius:12px;padding:16px;margin-bottom:20px;">
+          <div style="font-weight:600;font-size:.9rem;color:var(--primary);margin-bottom:12px;">Mother's Details</div>
+          <div class="form-row">
+            <div class="form-group"><label>Mother's Name</label><input class="form-control" id="pf-mother-name" placeholder="e.g. Sunita Sharma"/></div>
+            <div class="form-group"><label>Occupation</label><input class="form-control" id="pf-mother-occ" placeholder="e.g. Teacher"/></div>
+          </div>
+          <div class="form-group"><label>Mother's Phone</label><input class="form-control" id="pf-mother-phone" placeholder="+91 …"/></div>
+        </div>
+        <div style="font-weight:600;font-size:.9rem;color:var(--primary);margin-bottom:12px;">📞 Emergency Contact</div>
+        <div class="form-row">
+          <div class="form-group"><label>Contact Name</label><input class="form-control" id="pf-emg-name" placeholder="e.g. Uncle / Guardian"/></div>
+          <div class="form-group"><label>Relation</label><input class="form-control" id="pf-emg-relation" placeholder="e.g. Uncle, Guardian"/></div>
+        </div>
+        <div class="form-group"><label>Emergency Phone</label><input class="form-control" id="pf-emg-phone" placeholder="+91 …"/></div>
+        <div style="font-weight:700;color:var(--primary);font-size:1rem;margin:20px 0 12px;">🚌 Transport Details</div>
+        <div class="form-row">
+          <div class="form-group"><label>Bus Route</label><select class="form-control" id="pf-bus-route"><option value="">— None / Own Vehicle —</option><option>Route A – Morning</option><option>Route B – Evening</option><option>Route C – Special</option></select></div>
+          <div class="form-group"><label>Bus Stop</label><input class="form-control" id="pf-bus-stop" placeholder="e.g. MG Road Stop"/></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Pickup Time</label><input class="form-control" id="pf-pickup" type="time"/></div>
+          <div class="form-group"><label>Drop Time</label><input class="form-control" id="pf-drop" type="time"/></div>
+        </div>
+      </div>
+
+      <!-- TAB: PROFILE PREVIEW -->
+      <div class="pm-tab-pane" id="tab-preview">
+        <div id="profilePreviewContent"><div style="text-align:center;padding:32px;color:var(--text-muted);">Save your profile first to see the preview.</div></div>
+      </div>
+
+    </div>
+    <div class="pm-footer">
+      <button style="padding:10px 20px;border:1.5px solid var(--border);border-radius:10px;background:#fff;font-size:.9rem;font-weight:600;cursor:pointer;font-family:var(--font-body);" onclick="closeProfileModal()">Cancel</button>
+      <button class="pm-save-btn" id="pmSaveBtn" onclick="saveProfile()">💾 Save Profile</button>
+    </div>
+  </div>
+</div>
+
+<!-- Camera Modal -->
+<div class="camera-modal-overlay" id="cameraModalOverlay">
+  <div class="camera-modal">
+    <div style="color:#fff;font-weight:700;font-size:1.05rem;margin-bottom:14px;">📷 Take a Photo</div>
+    <video id="cameraVideo" autoplay playsinline></video>
+    <canvas id="cameraCanvas"></canvas>
+    <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
+      <button class="pm-save-btn" onclick="capturePhoto()">📸 Capture</button>
+      <button style="padding:9px 18px;border:1.5px solid #555;border-radius:8px;background:none;color:#fff;cursor:pointer;font-size:.85rem;" onclick="closeCamera()">✕ Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const r=localStorage.getItem('erp_role');
+  if(r&&r!=='student'){window.location.href='login.html';}
+})();
+
+document.getElementById('sidebarToggle')?.addEventListener('click',()=>document.getElementById('sidebar').classList.toggle('open'));
+document.getElementById('notifBtn')?.addEventListener('click',e=>{e.stopPropagation();document.getElementById('notifPanel')?.classList.toggle('open');});
+document.addEventListener('click',()=>{document.getElementById('notifPanel')?.classList.remove('open');closeProfileDropdown();});
+
+function markAllRead(){
+  // Clear all notification items
+  const container = document.getElementById('notifItemsContainer');
+  const emptyMsg  = document.getElementById('notifEmptyMsg');
+  const badge     = document.querySelector('.notif-badge');
+  const markBtn   = document.getElementById('markAllReadBtn');
+  if(container) container.innerHTML='';
+  if(emptyMsg)  emptyMsg.style.display='block';
+  if(badge)     badge.style.display='none';
+  if(markBtn)   markBtn.style.display='none';
+}
+
+const sectionTitles={dashboard:'Student Dashboard',assignments:'My Assignments',fees:'Fee Status',marksheet:'My Marksheet',idcard:'ID & Admit Card',bus:'Bus Tracking',chat:'Chat with Teachers',notifications:'Notifications'};
+
+document.querySelectorAll('.sidebar-nav a[data-section]').forEach(a=>{
+  a.addEventListener('click',e=>{
+    e.preventDefault();
+    document.querySelectorAll('[id^="section-"]').forEach(s=>s.classList.add('hidden'));
+    document.getElementById('section-'+a.dataset.section)?.classList.remove('hidden');
+    document.querySelectorAll('.sidebar-nav a').forEach(b=>b.classList.remove('active'));
+    a.classList.add('active');
+    document.getElementById('pageTitle').textContent=sectionTitles[a.dataset.section]||a.dataset.section;
+    if(window.innerWidth<900)document.getElementById('sidebar').classList.remove('open');
+  });
+});
+
+function filterAssign(){
+  const q=document.getElementById('assignSearch').value.toLowerCase();
+  const f=document.getElementById('assignFilter').value;
+  document.querySelectorAll('.assign-card').forEach(c=>{
+    const subj=c.dataset.subj||'';
+    const text=c.textContent.toLowerCase();
+    c.style.display=(text.includes(q)&&(f===''||subj===f))?'':'none';
+  });
+}
+
+function openStudChat(name,role){
+  document.getElementById('studChatWith').textContent=name;
+  document.getElementById('studChatRole').textContent=role;
+  document.querySelectorAll('[id^="sc-"]').forEach(el=>{el.style.background='var(--bg)';el.style.color='var(--text)';});
+  const el=document.getElementById('sc-'+name);
+  if(el){el.style.background='var(--primary)';el.style.color='#fff';}
+}
+function sendStudMsg(){
+  const inp=document.getElementById('studChatInput');
+  if(!inp.value.trim())return;
+  const win=document.getElementById('studChatWindow');
+  const m=document.createElement('div');
+  m.className='msg sent';
+  m.innerHTML=inp.value+'<div class="msg-meta">'+new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})+'</div>';
+  win.appendChild(m);win.scrollTop=win.scrollHeight;inp.value='';
+}
+document.getElementById('studChatInput')?.addEventListener('keydown',e=>{if(e.key==='Enter')sendStudMsg();});
+
+function downloadReceipt(){
+  const p=getProfile();
+  const {jsPDF}=window.jspdf;
+  const doc=new jsPDF();
+  doc.setFillColor(15,37,64);doc.rect(0,0,210,30,'F');
+  doc.setTextColor(255,255,255);doc.setFontSize(16);doc.text('EduCore School – Fee Receipt',105,18,{align:'center'});
+  doc.setTextColor(0,0,0);doc.setFontSize(11);
+  const rows=[['Student',p.name||'Arjun Sharma'],['Class',(p.class||'10')+' – '+(p.section||'A')],['Roll No',p.rollno||'2024-1056'],['Receipt No','RC001'],['Term','April 2025'],['Amount','₹5,000'],['Payment Date','2025-04-01'],['Status','PAID']];
+  let y=45;
+  rows.forEach(([k,v])=>{doc.setFont(undefined,'bold');doc.text(k+':',20,y);doc.setFont(undefined,'normal');doc.text(v,80,y);y+=12;});
+  doc.setFillColor(46,204,113);doc.roundedRect(130,40,60,20,4,4,'F');
+  doc.setTextColor(255,255,255);doc.setFontSize(14);doc.text('PAID',160,53,{align:'center'});
+  doc.save('fee-receipt.pdf');
+  toast('Receipt downloaded!');
+}
+
+function downloadMarksheet(){
+  const p=getProfile();
+  const {jsPDF}=window.jspdf;
+  const doc=new jsPDF();
+  doc.setFillColor(15,37,64);doc.rect(0,0,210,32,'F');
+  doc.setTextColor(255,255,255);doc.setFontSize(16);doc.text('EduCore School – Marksheet',105,15,{align:'center'});
+  doc.setFontSize(10);doc.text('Final Examination 2025',105,24,{align:'center'});
+  doc.setTextColor(0,0,0);doc.setFontSize(11);
+  doc.text(`Student: ${p.name||'Arjun Sharma'}    Class: ${p.class||'10'}-${p.section||'A'}    Roll: ${p.rollno||'2024-1056'}`,20,46);
+  const headers=['Subject','Max','Obtained','%','Grade'];
+  const scores=p.scores&&p.scores.length?p.scores:[{subj:'Mathematics',obtained:88,max:100},{subj:'Science',obtained:91,max:100},{subj:'English',obtained:79,max:100},{subj:'Hindi',obtained:85,max:100},{subj:'Social Science',obtained:82,max:100}];
+  const total=scores.reduce((a,s)=>a+Number(s.obtained),0);
+  const maxTotal=scores.reduce((a,s)=>a+Number(s.max),0);
+  const pct=Math.round(total/maxTotal*100);
+  const grade=pct>=90?'A+':pct>=80?'A':pct>=70?'B+':pct>=60?'B':'C';
+  const data=[...scores.map(s=>[s.subj,s.max,s.obtained,Math.round(s.obtained/s.max*100)+'%',s.obtained/s.max>=.9?'A+':s.obtained/s.max>=.8?'A':s.obtained/s.max>=.7?'B+':'B']),['TOTAL',maxTotal,total,pct+'%',grade]];
+  let y=60;
+  doc.setFillColor(26,60,94);doc.rect(15,y-6,180,10,'F');
+  doc.setTextColor(255,255,255);doc.setFontSize(9);
+  headers.forEach((h,i)=>doc.text(h,[20,65,100,135,165][i],y));
+  doc.setTextColor(0,0,0);
+  data.forEach((row,ri)=>{y+=12;if(ri%2===0){doc.setFillColor(247,249,252);doc.rect(15,y-6,180,10,'F');}row.forEach((v,i)=>doc.text(String(v),[20,65,100,135,165][i]||20,y));});
+  doc.setFontSize(12);y+=20;doc.text(`Result: PASS    Overall Grade: ${grade}    Percentage: ${pct}%`,20,y);
+  doc.save('marksheet.pdf');toast('Marksheet downloaded!');
+}
+
+function downloadStudIdCard(){
+  const p=getProfile();
+  const {jsPDF}=window.jspdf;
+  const doc=new jsPDF({unit:'mm',format:[85,55]});
+  doc.setFillColor(15,37,64);doc.rect(0,0,85,55,'F');
+  doc.setTextColor(255,255,255);doc.setFontSize(7);
+  doc.text('EDUCORE SCHOOL — STUDENT ID CARD',42.5,8,{align:'center'});
+  doc.setFontSize(11);doc.text(p.name||'Arjun Sharma',42.5,20,{align:'center'});
+  doc.setFontSize(8);
+  doc.text(`Class ${p.class||'10'} – ${p.section||'A'}`,42.5,28,{align:'center'});
+  doc.text(`Roll: ${p.rollno||'2024-1056'}`,42.5,35,{align:'center'});
+  doc.setFontSize(6);doc.text('Valid: 2024-25',10,50);doc.text('EduCore ERP',75,50,{align:'right'});
+  doc.save('student-id-card.pdf');toast('ID Card downloaded!');
+}
+
+function toast(msg,type='success'){
+  const c=document.getElementById('toastContainer');
+  const t=document.createElement('div');
+  t.className=`toast ${type==='error'?'error':''}`;
+  t.textContent=msg;c.appendChild(t);setTimeout(()=>t.remove(),3000);
+}
+
+/* ══════════════════════════════════════════════
+   STUDENT PROFILE SYSTEM
+══════════════════════════════════════════════ */
+const STUDENT_DEFAULTS={
+  name:'',rollno:'',dob:'',gender:'',blood:'',nationality:'',aadhar:'',phone:'',address:'',hobbies:'',bio:'',
+  class:'',section:'',acyear:'',admission:'',classteacher:'',house:'',subjects:[],prevschool:'',prevclass:'',scores:[],
+  fatherName:'',fatherOcc:'',fatherPhone:'',motherName:'',motherOcc:'',motherPhone:'',
+  emgName:'',emgRelation:'',emgPhone:'',busRoute:'',busStop:'',pickup:'',drop:'',
+  avatarDataUrl:''
+};
+
+function getProfile(){
+  try{return JSON.parse(localStorage.getItem('erp_student_profile')||'null')||{...STUDENT_DEFAULTS};}
+  catch(e){return{...STUDENT_DEFAULTS};}
+}
+function saveProfileStore(p){localStorage.setItem('erp_student_profile',JSON.stringify(p));}
+
+function openProfileModal(tabId){
+  closeProfileDropdown();
+  loadProfileIntoForm();
+  document.getElementById('profileModalOverlay').classList.add('open');
+  if(tabId){const btn=document.querySelector(`.pm-tab[data-tab="${tabId}"]`);if(btn)switchPmTab(btn,tabId);}
+}
+function closeProfileModal(){document.getElementById('profileModalOverlay').classList.remove('open');}
+document.getElementById('profileModalOverlay').addEventListener('click',function(e){if(e.target===this)closeProfileModal();});
+
+function switchPmTab(btn,tabId){
+  document.querySelectorAll('.pm-tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.pm-tab-pane').forEach(p=>p.classList.remove('active'));
+  btn.classList.add('active');document.getElementById(tabId).classList.add('active');
+  const sb=document.getElementById('pmSaveBtn');if(sb)sb.style.display=tabId==='tab-preview'?'none':'';
+}
+
+function loadProfileIntoForm(){
+  const p=getProfile();
+  const map={
+    'pf-name':'name','pf-rollno':'rollno','pf-dob':'dob','pf-gender':'gender','pf-blood':'blood',
+    'pf-nationality':'nationality','pf-aadhar':'aadhar','pf-phone':'phone','pf-address':'address',
+    'pf-hobbies':'hobbies','pf-bio':'bio','pf-class':'class','pf-section':'section',
+    'pf-acyear':'acyear','pf-admission':'admission','pf-classteacher':'classteacher','pf-house':'house',
+    'pf-prevschool':'prevschool','pf-prevclass':'prevclass',
+    'pf-father-name':'fatherName','pf-father-occ':'fatherOcc','pf-father-phone':'fatherPhone',
+    'pf-mother-name':'motherName','pf-mother-occ':'motherOcc','pf-mother-phone':'motherPhone',
+    'pf-emg-name':'emgName','pf-emg-relation':'emgRelation','pf-emg-phone':'emgPhone',
+    'pf-bus-route':'busRoute','pf-bus-stop':'busStop','pf-pickup':'pickup','pf-drop':'drop'
+  };
+  Object.entries(map).forEach(([id,key])=>{const el=document.getElementById(id);if(el)el.value=p[key]||'';});
+  renderSubjectChips(p.subjects||[]);
+  renderPerfRows(p.scores||[]);
+  if(p.avatarDataUrl)setAvatarPreview(p.avatarDataUrl);else resetAvatarPreview();
+}
+
+function saveProfile(){
+  const p=getProfile();
+  const map={
+    'pf-name':'name','pf-rollno':'rollno','pf-dob':'dob','pf-gender':'gender','pf-blood':'blood',
+    'pf-nationality':'nationality','pf-aadhar':'aadhar','pf-phone':'phone','pf-address':'address',
+    'pf-hobbies':'hobbies','pf-bio':'bio','pf-class':'class','pf-section':'section',
+    'pf-acyear':'acyear','pf-admission':'admission','pf-classteacher':'classteacher','pf-house':'house',
+    'pf-prevschool':'prevschool','pf-prevclass':'prevclass',
+    'pf-father-name':'fatherName','pf-father-occ':'fatherOcc','pf-father-phone':'fatherPhone',
+    'pf-mother-name':'motherName','pf-mother-occ':'motherOcc','pf-mother-phone':'motherPhone',
+    'pf-emg-name':'emgName','pf-emg-relation':'emgRelation','pf-emg-phone':'emgPhone',
+    'pf-bus-route':'busRoute','pf-bus-stop':'busStop','pf-pickup':'pickup','pf-drop':'drop'
+  };
+  Object.entries(map).forEach(([id,key])=>{const el=document.getElementById(id);if(el)p[key]=el.value;});
+  p.subjects=[...document.querySelectorAll('#subjectChips .s-chip')].map(c=>c.dataset.val);
+  p.scores=collectPerfRows();
+  const img=document.getElementById('pmAvatarImg');
+  if(img.style.display!=='none'&&img.src&&img.src!==window.location.href)p.avatarDataUrl=img.src;
+  saveProfileStore(p);
+  applyProfileToDashboard(p);
+  toast('Profile saved! ✓');
+  closeProfileModal();
+}
+
+function applyProfileToDashboard(p){
+  const name=p.name||localStorage.getItem('erp_user')||'Student';
+  const cap=name.charAt(0).toUpperCase()+name.slice(1);
+  document.getElementById('sidebarName').textContent=cap;
+  document.getElementById('pdName').textContent=cap;
+  const roleText=[p.class?'Class '+p.class:'',p.section?'– '+p.section:'',p.rollno?'· Roll '+p.rollno:''].filter(Boolean).join(' ')||'Student';
+  document.getElementById('sidebarRole').textContent=roleText;
+  document.getElementById('pdRole').textContent=roleText;
+  const url=p.avatarDataUrl;
+  [['sidebarAvatarImg','sidebarAvatarEmoji'],['topbarAvatarImg','topbarAvatarEmoji'],['pmAvatarImg','pmAvatarEmoji']].forEach(([iId,eId])=>{
+    const im=document.getElementById(iId),em=document.getElementById(eId);
+    if(im){im.src=url||'';im.style.display=url?'block':'none';}
+    if(em)em.style.display=url?'none':'block';
+  });
+}
+
+function loadProfileData(){const p=getProfile();if(p.name||p.avatarDataUrl)applyProfileToDashboard(p);}
+
+/* Avatar */
+function handleAvatarUpload(e){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>setAvatarPreview(ev.target.result);r.readAsDataURL(f);}
+function setAvatarPreview(url){const im=document.getElementById('pmAvatarImg'),em=document.getElementById('pmAvatarEmoji');im.src=url;im.style.display='block';em.style.display='none';}
+function resetAvatarPreview(){const im=document.getElementById('pmAvatarImg'),em=document.getElementById('pmAvatarEmoji');im.src='';im.style.display='none';em.style.display='block';}
+let cameraStream=null;
+function openCamera(){navigator.mediaDevices.getUserMedia({video:{facingMode:'user'}}).then(s=>{cameraStream=s;document.getElementById('cameraVideo').srcObject=s;document.getElementById('cameraModalOverlay').classList.add('open');}).catch(()=>toast('Camera not available','error'));}
+function closeCamera(){if(cameraStream){cameraStream.getTracks().forEach(t=>t.stop());cameraStream=null;}document.getElementById('cameraModalOverlay').classList.remove('open');}
+function capturePhoto(){const v=document.getElementById('cameraVideo'),c=document.getElementById('cameraCanvas');c.width=v.videoWidth;c.height=v.videoHeight;c.getContext('2d').drawImage(v,0,0);setAvatarPreview(c.toDataURL('image/jpeg',.85));closeCamera();}
+
+/* Subject chips */
+function renderSubjectChips(vals){
+  const cont=document.getElementById('subjectChips');
+  cont.innerHTML=vals.map(v=>`<div class="s-chip chip" data-val="${v}">${v}<button style="cursor:pointer;opacity:.6;font-size:1rem;background:none;border:none;color:var(--primary);padding:0;margin-left:4px;" onclick="this.closest('.s-chip').remove()">×</button></div>`).join('');
+}
+function addSubjectChip(){
+  const inp=document.getElementById('subjectInput');
+  const val=inp.value.trim();if(!val)return;
+  const cont=document.getElementById('subjectChips');
+  if([...cont.querySelectorAll('.s-chip')].some(c=>c.dataset.val===val)){toast(`"${val}" already added`);return;}
+  const d=document.createElement('div');d.className='s-chip chip';d.dataset.val=val;
+  d.innerHTML=`${val}<button style="cursor:pointer;opacity:.6;font-size:1rem;background:none;border:none;color:var(--primary);padding:0;margin-left:4px;" onclick="this.closest('.s-chip').remove()">×</button>`;
+  cont.appendChild(d);inp.value='';
+}
+
+/* Performance rows */
+function renderPerfRows(scores){
+  const cont=document.getElementById('perfRows');cont.innerHTML='';
+  scores.forEach((s,i)=>cont.appendChild(buildPerfRow(s.subj,s.obtained,s.max,i)));
+}
+function addPerfRow(){
+  const cont=document.getElementById('perfRows');
+  cont.appendChild(buildPerfRow('','','',cont.children.length));
+}
+function buildPerfRow(subj,obtained,max,idx){
+  const row=document.createElement('div');row.className='perf-row';row.style.cssText='display:flex;gap:8px;align-items:center;';
+  row.innerHTML=`
+    <input class="form-control perf-subj" placeholder="Subject" value="${subj}" style="flex:2;"/>
+    <input class="form-control perf-obtained" type="number" placeholder="Score" value="${obtained}" style="flex:1;"/>
+    <span style="color:var(--text-muted);font-size:.85rem;">/ </span>
+    <input class="form-control perf-max" type="number" placeholder="Max" value="${max||100}" style="flex:1;"/>
+    <button onclick="this.closest('.perf-row').remove()" style="background:none;border:none;color:var(--danger);font-size:1.2rem;cursor:pointer;padding:0 4px;">×</button>`;
+  return row;
+}
+function collectPerfRows(){
+  return [...document.querySelectorAll('.perf-row')].map(r=>({
+    subj:r.querySelector('.perf-subj').value.trim(),
+    obtained:Number(r.querySelector('.perf-obtained').value)||0,
+    max:Number(r.querySelector('.perf-max').value)||100
+  })).filter(s=>s.subj);
+}
+
+/* Profile Preview */
+function renderProfilePreview(){
+  const p=getProfile();
+  const av=p.avatarDataUrl?`<img src="${p.avatarDataUrl}" alt=""/>`:`<span style="font-size:2rem;">👨‍🎓</span>`;
+  const fv=(v,fb='—')=>v&&v.trim()?v.trim():`<span style="color:var(--text-muted);font-style:italic;">${fb}</span>`;
+
+  const scoresHtml=p.scores&&p.scores.length?`
+    <div class="ppc-section">
+      <div class="ppc-section-title">📊 Subject Performance</div>
+      <div style="display:flex;flex-direction:column;gap:12px;">
+        ${p.scores.map(s=>{const pct=Math.round(s.obtained/s.max*100);return `
+          <div>
+            <div style="display:flex;justify-content:space-between;font-size:.86rem;margin-bottom:4px;">
+              <span style="font-weight:500;">${s.subj}</span>
+              <strong style="color:var(--primary);">${s.obtained}/${s.max} (${pct}%)</strong>
+            </div>
+            <div class="subj-perf-bar-wrap"><div class="subj-perf-bar" style="width:${pct}%;"></div></div>
+          </div>`;}).join('')}
+      </div>
+    </div>`:'';
+
+  const transportHtml=(p.busRoute||p.busStop)?`
+    <div class="ppc-section">
+      <div class="ppc-section-title">🚌 Transport</div>
+      <div class="ppc-grid">
+        <div class="ppc-field"><div class="ppc-field-label">Route</div><div class="ppc-field-val">${fv(p.busRoute)}</div></div>
+        <div class="ppc-field"><div class="ppc-field-label">Stop</div><div class="ppc-field-val">${fv(p.busStop)}</div></div>
+        <div class="ppc-field" style="border-bottom:none;"><div class="ppc-field-label">Pickup</div><div class="ppc-field-val">${fv(p.pickup)}</div></div>
+        <div class="ppc-field" style="border-right:none;border-bottom:none;"><div class="ppc-field-label">Drop</div><div class="ppc-field-val">${fv(p.drop)}</div></div>
+      </div>
+    </div>`:'';
+
+  document.getElementById('profilePreviewContent').innerHTML=`
+    <div class="prof-preview-card">
+      <div class="ppc-banner"><div class="ppc-banner-pattern"></div><div class="ppc-avatar-wrap">${av}</div></div>
+      <div class="ppc-main">
+        <div class="ppc-name">${p.name||'Name not set'}</div>
+        <div class="ppc-designation">${[p.class?'Class '+p.class:'',p.section?'Section '+p.section:''].filter(Boolean).join(' · ')||'Student'}</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">
+          ${p.rollno?`<span style="display:inline-flex;align-items:center;gap:5px;background:rgba(26,60,94,.08);padding:4px 12px;border-radius:20px;font-size:.79rem;color:var(--primary);font-weight:600;">🔢 Roll ${p.rollno}</span>`:''}
+          ${p.house?`<span style="display:inline-flex;align-items:center;gap:5px;background:rgba(26,60,94,.08);padding:4px 12px;border-radius:20px;font-size:.79rem;color:var(--primary);font-weight:600;">🏅 ${p.house}</span>`:''}
+          ${p.blood?`<span style="display:inline-flex;align-items:center;gap:5px;background:rgba(220,53,69,.08);padding:4px 12px;border-radius:20px;font-size:.79rem;color:var(--danger);font-weight:600;">🩸 ${p.blood}</span>`:''}
+        </div>
+
+        <div class="ppc-grid" style="margin-top:16px;">
+          <div class="ppc-field"><div class="ppc-field-label">Date of Birth</div><div class="ppc-field-val">${p.dob?new Date(p.dob).toLocaleDateString('en-IN',{day:'numeric',month:'long',year:'numeric'}):'—'}</div></div>
+          <div class="ppc-field"><div class="ppc-field-label">Gender</div><div class="ppc-field-val">${fv(p.gender)}</div></div>
+          <div class="ppc-field"><div class="ppc-field-label">Phone</div><div class="ppc-field-val">${fv(p.phone)}</div></div>
+          <div class="ppc-field"><div class="ppc-field-label">Nationality</div><div class="ppc-field-val">${fv(p.nationality)}</div></div>
+          <div class="ppc-field"><div class="ppc-field-label">Admission Date</div><div class="ppc-field-val">${p.admission?new Date(p.admission).toLocaleDateString('en-IN',{day:'numeric',month:'long',year:'numeric'}):'—'}</div></div>
+          <div class="ppc-field"><div class="ppc-field-label">Class Teacher</div><div class="ppc-field-val">${fv(p.classteacher)}</div></div>
+          <div class="ppc-field" style="grid-column:1/-1;border-right:none;border-bottom:${p.hobbies?'1px solid var(--border)':'none'};"><div class="ppc-field-label">Address</div><div class="ppc-field-val">${fv(p.address)}</div></div>
+          ${p.hobbies?`<div class="ppc-field" style="grid-column:1/-1;border-right:none;border-bottom:none;"><div class="ppc-field-label">Hobbies & Activities</div><div class="ppc-field-val">${p.hobbies}</div></div>`:''}
+        </div>
+
+        ${p.bio?`<div class="ppc-section"><div class="ppc-section-title">About</div><div class="ppc-bio">${p.bio}</div></div>`:''}
+
+        ${p.subjects&&p.subjects.length?`<div class="ppc-section"><div class="ppc-section-title">📚 Enrolled Subjects</div><div class="chip-list">${p.subjects.map(s=>`<span class="chip">${s}</span>`).join('')}</div></div>`:''}
+
+        ${scoresHtml}
+
+        ${(p.fatherName||p.motherName)?`
+        <div class="ppc-section">
+          <div class="ppc-section-title">👨‍👩‍👦 Family</div>
+          <div class="ppc-grid">
+            ${p.fatherName?`<div class="ppc-field"><div class="ppc-field-label">Father</div><div class="ppc-field-val">${p.fatherName}${p.fatherOcc?' · '+p.fatherOcc:''}</div></div>`:''}
+            ${p.motherName?`<div class="ppc-field"><div class="ppc-field-label">Mother</div><div class="ppc-field-val">${p.motherName}${p.motherOcc?' · '+p.motherOcc:''}</div></div>`:''}
+            ${p.emgName?`<div class="ppc-field" style="grid-column:1/-1;border-right:none;border-bottom:none;"><div class="ppc-field-label">Emergency Contact</div><div class="ppc-field-val">${p.emgName}${p.emgRelation?' ('+p.emgRelation+')':''} · ${p.emgPhone||'—'}</div></div>`:''}
+          </div>
+        </div>`:''}
+
+        ${transportHtml}
+      </div>
+    </div>`;
+}
+
+/* Dropdown */
+document.getElementById('topbarAvatar').addEventListener('click',e=>{e.stopPropagation();document.getElementById('notifPanel').classList.remove('open');document.getElementById('profileDropdown').classList.toggle('open');});
+function closeProfileDropdown(){document.getElementById('profileDropdown')?.classList.remove('open');}
+
+/* Init */
+document.addEventListener('DOMContentLoaded',()=>loadProfileData());
+</script>
+
+<!-- =================== FEE PAYMENT SYSTEM =================== -->
+<script>
+(function(){
+  /* ── Config ── */
+  const ANNUAL_FEE = 20000; // ₹20,000 total annual fee
+  const STU_KEY    = 'erp_students';
+  const FEE_KEY    = 'erp_fee_payments';
+
+  /* ── Get student identity (from profile or first student in erp_students) ── */
+  function getStuProfile(){
+    try{ return JSON.parse(localStorage.getItem('erp_student_profile')||'null'); }catch(e){return null;}
+  }
+  function getStudentRecord(){
+    const p = getStuProfile();
+    const students = JSON.parse(localStorage.getItem(STU_KEY)||'[]');
+    if(!students.length) return null;
+    if(p && p.name){
+      const found = students.find(s=>(s.firstName+' '+s.lastName).toLowerCase()===p.name.toLowerCase());
+      if(found) return found;
+    }
+    return students[0]; // fallback: first student
+  }
+
+  /* ── Fee payments store ── */
+  function getFeePayments(){
+    try{ return JSON.parse(localStorage.getItem(FEE_KEY)||'[]'); }catch(e){return [];}
+  }
+  function saveFeePayments(arr){
+    localStorage.setItem(FEE_KEY, JSON.stringify(arr));
+  }
+
+  /* ── Seed seed initial paid records so dashboard isn't empty ── */
+  (function seedInitial(){
+    const existing = getFeePayments();
+    if(existing.length) return;
+    const seed = [
+      {id:'RC001',studentId:'s1',studentName:'Arjun Sharma',cls:'Class 10',term:'April 2025',amount:5000,mode:'Online',date:'2025-04-01',status:'Paid',note:'Term 1 tuition fee'},
+      {id:'RC002',studentId:'s1',studentName:'Arjun Sharma',cls:'Class 10',term:'January 2025',amount:5000,mode:'Online',date:'2025-01-03',status:'Paid',note:''},
+      {id:'RC003',studentId:'s1',studentName:'Arjun Sharma',cls:'Class 10',term:'October 2024',amount:5000,mode:'Cash',date:'2024-10-05',status:'Paid',note:''},
+    ];
+    saveFeePayments(seed);
+  })();
+
+  /* ── Compute totals ── */
+  function computeSummary(payments, stuId){
+    const mine = stuId ? payments.filter(p=>p.studentId===stuId||p.studentName==='Arjun Sharma') : payments;
+    const totalPaid = mine.reduce((s,p)=>s+Number(p.amount),0);
+    const balance   = Math.max(0, ANNUAL_FEE - totalPaid);
+    let status = 'Pending';
+    if(totalPaid >= ANNUAL_FEE) status = 'Paid';
+    else if(totalPaid > 0) status = 'Partial';
+    return {totalPaid, balance, status, records: mine};
+  }
+
+  /* ── Render fee section ── */
+  function renderFeeSection(){
+    const payments = getFeePayments();
+    const rec = getStudentRecord();
+    const stuId = rec ? rec.id : 's1';
+    const stuName = rec ? (rec.firstName+' '+rec.lastName) : 'Arjun Sharma';
+    const stuCls  = rec ? (rec.class||'Class 10') : 'Class 10';
+    const {totalPaid, balance, status, records} = computeSummary(payments, stuId);
+
+    /* Banner */
+    const banner = document.getElementById('feeBanner');
+    const title  = document.getElementById('feeBannerTitle');
+    const sub    = document.getElementById('feeBannerSub');
+    const btnFull    = document.getElementById('btnPayFull');
+    const btnPartial = document.getElementById('btnPayPartial');
+
+    if(status === 'Paid'){
+      banner.className = 'fee-banner'; // green
+      title.textContent = '✅ All Fees Paid';
+      sub.textContent   = `Annual fee of ₹${ANNUAL_FEE.toLocaleString()} fully cleared. Next year starts in April.`;
+      btnFull.style.display    = 'none';
+      btnPartial.style.display = 'none';
+    } else if(status === 'Partial'){
+      banner.className = 'fee-banner';
+      banner.style.background = 'linear-gradient(135deg,#e67700,#f39c12)';
+      title.textContent = '⚠️ Partial Fee Paid';
+      sub.textContent   = `₹${totalPaid.toLocaleString()} paid · ₹${balance.toLocaleString()} still due`;
+      btnFull.style.display    = 'inline-block';
+      btnPartial.style.display = 'inline-block';
+    } else {
+      banner.className = 'fee-banner pending'; // red
+      banner.style.background = '';
+      title.textContent = '❌ Fee Pending';
+      sub.textContent   = `Annual fee of ₹${ANNUAL_FEE.toLocaleString()} is due. Please pay to avoid disruption.`;
+      btnFull.style.display    = 'inline-block';
+      btnPartial.style.display = 'inline-block';
+    }
+
+    /* Summary cards */
+    document.getElementById('fsTotalDue').textContent  = '₹'+ANNUAL_FEE.toLocaleString();
+    document.getElementById('fsTotalPaid').textContent = '₹'+totalPaid.toLocaleString();
+    document.getElementById('fsBalance').textContent   = balance > 0 ? '₹'+balance.toLocaleString() : '₹0 (Cleared)';
+    if(balance === 0) document.getElementById('fsBalance').style.color='var(--success)';
+
+    /* Status badge */
+    const badgeEl = document.getElementById('feeStatusBadge');
+    const badgeMap = {Paid:'badge-success',Partial:'badge-warning',Pending:'badge-danger'};
+    badgeEl.className = 'badge ' + (badgeMap[status]||'badge-warning');
+    badgeEl.textContent = status;
+
+    /* Table */
+    const tbody = document.getElementById('stuFeeTableBody');
+    if(!records.length){
+      tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--text-muted);">No fee records yet. Make a payment to get started.</td></tr>';
+    } else {
+      tbody.innerHTML = records.slice().reverse().map(f=>`
+        <tr>
+          <td><strong>${f.id}</strong></td>
+          <td>${f.term||'—'}</td>
+          <td>₹${Number(f.amount).toLocaleString()}</td>
+          <td>${f.date||'—'}</td>
+          <td>${f.mode||'—'}</td>
+          <td><span class="badge badge-${f.status==='Paid'?'success':f.status==='Pending'?'danger':'warning'}">${f.status}</span></td>
+          <td><button class="btn-secondary" style="font-size:0.78rem;padding:5px 12px" onclick="stuDownloadReceipt('${f.id}','${f.studentName||stuName}','${f.cls||stuCls}',${f.amount},'${f.term||''}','${f.mode||''}','${f.date||''}')">Receipt</button></td>
+        </tr>`).join('');
+      // Add upcoming row if pending
+      if(status !== 'Paid'){
+        tbody.innerHTML += `<tr style="opacity:.6"><td>—</td><td>Next Term</td><td>₹5,000</td><td>—</td><td>—</td><td><span class="badge badge-warning">Upcoming</span></td><td>—</td></tr>`;
+      }
+    }
+
+    /* Also update dashboard stat card */
+    const scFeeVal = document.querySelector('.stat-card:nth-child(2) .sc-val');
+    const scFeeTrend = document.querySelector('.stat-card:nth-child(2) .sc-trend');
+    if(scFeeVal){ scFeeVal.textContent = status; }
+    if(scFeeTrend){ scFeeTrend.textContent = status==='Paid'?'All clear':status==='Partial'?`₹${balance.toLocaleString()} due`:'Payment required'; }
+  }
+
+  /* ── Pay modal ── */
+  let payType = 'full';
+  window.openPayModal = function(type){
+    payType = type;
+    const payments = getFeePayments();
+    const rec = getStudentRecord();
+    const stuId = rec ? rec.id : 's1';
+    const {balance} = computeSummary(payments, stuId);
+    document.getElementById('payModalTitle').textContent = type==='full' ? '💰 Pay Full Fee' : '💳 Pay Partial Fee';
+    document.getElementById('pmAmount').value = type==='full' ? balance : Math.ceil(balance/2);
+    document.getElementById('pmTerm').value = '';
+    document.getElementById('pmNote').value = '';
+    document.getElementById('payModalOverlay').style.opacity='1';
+    document.getElementById('payModalOverlay').style.visibility='visible';
+  };
+  window.closePayModal = function(){
+    document.getElementById('payModalOverlay').style.opacity='0';
+    document.getElementById('payModalOverlay').style.visibility='hidden';
+  };
+  document.getElementById('payModalOverlay').addEventListener('click',function(e){if(e.target===this)closePayModal();});
+
+  window.submitFeePayment = function(){
+    const amount = parseInt(document.getElementById('pmAmount').value)||0;
+    if(amount <= 0){ if(typeof toast==='function')toast('Enter a valid amount','error'); return; }
+    const term = document.getElementById('pmTerm').value.trim() || 'General';
+    const mode = document.getElementById('pmMode').value;
+    const note = document.getElementById('pmNote').value.trim();
+
+    const rec     = getStudentRecord();
+    const stuId   = rec ? rec.id   : 's1';
+    const stuName = rec ? (rec.firstName+' '+rec.lastName) : 'Arjun Sharma';
+    const stuCls  = rec ? (rec.class||'Class 10') : 'Class 10';
+
+    const payments = getFeePayments();
+    const newId    = 'RC' + String(Date.now()).slice(-6);
+    const today    = new Date().toISOString().slice(0,10);
+
+    // Determine status for this payment
+    const {totalPaid, balance} = computeSummary(payments, stuId);
+    const newTotal = totalPaid + amount;
+    const payStatus = newTotal >= ANNUAL_FEE ? 'Paid' : 'Partial';
+
+    const newRecord = {id:newId, studentId:stuId, studentName:stuName, cls:stuCls, term, amount, mode, date:today, status:payStatus, note};
+    payments.push(newRecord);
+    saveFeePayments(payments);
+
+    /* Update student feeStatus in erp_students */
+    try{
+      let students = JSON.parse(localStorage.getItem(STU_KEY)||'[]');
+      const idx = students.findIndex(s=>s.id===stuId);
+      if(idx>-1){
+        students[idx].feeStatus = payStatus;
+        localStorage.setItem(STU_KEY, JSON.stringify(students));
+      }
+    }catch(e){}
+
+    closePayModal();
+    renderFeeSection();
+    if(typeof toast==='function') toast(`✅ Payment of ₹${amount.toLocaleString()} recorded! Receipt: ${newId}`);
+  };
+
+  /* ── Download receipt ── */
+  window.stuDownloadReceipt = function(id,student,cls,amount,term,mode,date){
+    // If called without args, use latest paid record
+    if(!id){
+      const payments = getFeePayments();
+      const rec = getStudentRecord();
+      const stuId = rec ? rec.id : 's1';
+      const {records} = computeSummary(payments, stuId);
+      const last = records.filter(r=>r.status==='Paid').slice(-1)[0]||records.slice(-1)[0];
+      if(last){id=last.id;student=last.studentName;cls=last.cls;amount=last.amount;term=last.term;mode=last.mode;date=last.date;}
+    }
+    if(!window.jspdf){alert('jsPDF not loaded. Download unavailable.');return;}
+    const {jsPDF}=window.jspdf;
+    const doc=new jsPDF({unit:'mm',format:'a5'});
+    doc.setFillColor(26,60,94);doc.rect(0,0,148,28,'F');
+    doc.setTextColor(255,255,255);doc.setFontSize(16);doc.text('EduCore School',74,12,{align:'center'});
+    doc.setFontSize(9);doc.text('Official Fee Receipt',74,20,{align:'center'});
+    doc.setTextColor(0,0,0);doc.setFontSize(10);
+    const rows=[['Receipt No',id||'—'],['Student Name',student||'—'],['Class',cls||'—'],['Term',term||'—'],['Payment Mode',mode||'—'],['Date',date||new Date().toLocaleDateString('en-IN')],['Amount','₹'+(Number(amount)||0).toLocaleString()]];
+    let y=38;
+    rows.forEach(([k,v])=>{doc.setFont(undefined,'bold');doc.text(k+':',10,y);doc.setFont(undefined,'normal');doc.text(String(v),70,y);y+=10;});
+    doc.setFillColor(46,204,113);doc.roundedRect(90,y,48,14,4,4,'F');
+    doc.setTextColor(255,255,255);doc.setFontSize(14);doc.text('✓ PAID',114,y+9,{align:'center'});
+    doc.save(`fee-receipt-${id||'receipt'}.pdf`);
+    if(typeof toast==='function')toast('Receipt downloaded!');
+  };
+
+  /* ── Init: render when fees section becomes visible ── */
+  const feeSec = document.getElementById('section-fees');
+  if(feeSec){
+    new MutationObserver(()=>{
+      if(!feeSec.classList.contains('hidden')) renderFeeSection();
+    }).observe(feeSec,{attributes:true,attributeFilter:['class']});
+  }
+  // Also render on load if section is visible
+  if(feeSec && !feeSec.classList.contains('hidden')) renderFeeSection();
+})();
+</script>
+
+<!-- ═══════════════════════════════════════════════════════════
+     TIMETABLE ENGINE
+     ════════════════════════════════════════════════════════ -->
+<script>
+(function(){
+
+/* ── Subject colour palette ── */
+var COLORS=[
+  {bg:'#e8f4fd',tc:'#1a5c9e',border:'#b3d4f0'},
+  {bg:'#e8faf0',tc:'#1a7a42',border:'#a0dbb8'},
+  {bg:'#fef9e7',tc:'#a07800',border:'#f0d580'},
+  {bg:'#fdecea',tc:'#c0392b',border:'#f5b8b3'},
+  {bg:'#f3e8fd',tc:'#6b21a8',border:'#d8aaee'},
+  {bg:'#e8fdf8',tc:'#0e7a6a',border:'#8cddd2'},
+  {bg:'#fdf0e8',tc:'#c05c00',border:'#f0c090'},
+  {bg:'#eaeeff',tc:'#2d3da0',border:'#a0aaee'},
+];
+function subjectColor(name){
+  var h=0;for(var i=0;i<name.length;i++)h=(h*31+name.charCodeAt(i))>>>0;
+  return COLORS[h%COLORS.length];
+}
+
+/* ── Master timetable data per class (saved in localStorage or defaults) ── */
+var DEFAULT_TIMETABLE={
+  '1': {Mon:['Maths','English','Drawing','—','EVS','Hindi','Music'],Tue:['Hindi','Maths','English','—','Drawing','EVS','PE'],Wed:['EVS','Hindi','Maths','—','English','Music','Drawing'],Thu:['English','EVS','Hindi','—','Maths','Drawing','Rhymes'],Fri:['Music','English','EVS','—','Hindi','Maths','GK']},
+  '2': {Mon:['Maths','English','EVS','—','Hindi','Drawing','Music'],Tue:['Hindi','Maths','English','—','EVS','PE','Drawing'],Wed:['English','EVS','Hindi','—','Maths','Music','GK'],Thu:['Drawing','Hindi','Maths','—','English','EVS','Rhymes'],Fri:['GK','English','Drawing','—','Hindi','Maths','PE']},
+  '3': {Mon:['Maths','English','Hindi','—','Science','Social','Art'],Tue:['Hindi','Maths','Science','—','English','Art','PE'],Wed:['Science','Hindi','English','—','Maths','Social','GK'],Thu:['English','Science','Maths','—','Hindi','Art','Music'],Fri:['Social','English','Hindi','—','Science','Maths','Yoga']},
+  '4': {Mon:['Maths','English','Hindi','—','Science','Social','Art'],Tue:['Hindi','Science','Maths','—','English','Comp','PE'],Wed:['English','Maths','Social','—','Hindi','Science','Music'],Thu:['Science','Hindi','English','—','Maths','Art','GK'],Fri:['Social','English','Maths','—','Hindi','Science','Yoga']},
+  '5': {Mon:['Maths','English','Hindi','—','Science','Social','Comp'],Tue:['Hindi','Maths','Science','—','English','Art','PE'],Wed:['Science','English','Maths','—','Hindi','Comp','Music'],Thu:['English','Hindi','Social','—','Maths','Science','GK'],Fri:['Comp','Science','English','—','Hindi','Maths','Yoga']},
+  '6': {Mon:['Mathematics','English','Hindi','—','Science','History','Computer'],Tue:['Hindi','Mathematics','Science','—','English','Geography','PE'],Wed:['Science','English','Mathematics','—','Hindi','Computer','Music'],Thu:['History','Science','Hindi','—','Mathematics','English','Art'],Fri:['Geography','Mathematics','English','—','Science','Hindi','Yoga']},
+  '7': {Mon:['Mathematics','English','Hindi','—','Science','History','Computer'],Tue:['Hindi','Mathematics','Science','—','English','Civics','PE'],Wed:['Science','English','Mathematics','—','Hindi','Computer','Art'],Thu:['History','Hindi','Mathematics','—','English','Science','Music'],Fri:['Civics','Science','English','—','Mathematics','Hindi','Yoga']},
+  '8': {Mon:['Mathematics','English','Hindi','—','Physics','History','Computer'],Tue:['Hindi','Mathematics','Chemistry','—','English','Geography','PE'],Wed:['Physics','English','Mathematics','—','Hindi','Computer','Art'],Thu:['Chemistry','Hindi','Physics','—','Mathematics','English','Music'],Fri:['Biology','Mathematics','English','—','Chemistry','Hindi','Yoga']},
+  '9': {Mon:['Mathematics','English','Hindi','—','Physics','Chemistry','Computer'],Tue:['Hindi','Mathematics','Biology','—','English','History','PE'],Wed:['Physics','English','Mathematics','—','Hindi','Computer','Art'],Thu:['Chemistry','Hindi','Physics','—','Mathematics','Biology','Music'],Fri:['Biology','Mathematics','English','—','Chemistry','Hindi','Yoga']},
+  '10':{Mon:['Mathematics','English','Hindi','—','Physics','Chemistry','Computer'],Tue:['Hindi','Mathematics','Biology','—','English','History','PE'],Wed:['Physics','English','Mathematics','—','Hindi','Computer','Art'],Thu:['Chemistry','Hindi','Mathematics','—','English','Biology','Music'],Fri:['Biology','Mathematics','English','—','Physics','Hindi','Yoga']},
+  '11':{Mon:['Physics','Mathematics','Chemistry','—','English','Biology','Computer'],Tue:['Chemistry','Physics','Mathematics','—','English','Hindi','PE'],Wed:['Biology','English','Physics','—','Mathematics','Computer','Art'],Thu:['Mathematics','Chemistry','Biology','—','Physics','English','Music'],Fri:['English','Biology','Chemistry','—','Mathematics','Physics','Yoga']},
+  '12':{Mon:['Physics','Mathematics','Chemistry','—','English','Biology','Computer'],Tue:['Chemistry','Physics','Mathematics','—','English','Hindi','PE'],Wed:['Biology','English','Physics','—','Mathematics','Computer','Practicals'],Thu:['Mathematics','Chemistry','Biology','—','Physics','English','Music'],Fri:['English','Biology','Chemistry','—','Mathematics','Physics','Yoga']},
+};
+var DAYS=['Mon','Tue','Wed','Thu','Fri'];
+var DAY_FULL={Mon:'Monday',Tue:'Tuesday',Wed:'Wednesday',Thu:'Thursday',Fri:'Friday'};
+var DAY_JS=[1,2,3,4,5]; // JS getDay() values
+
+function getStoredTimetable(){
+  try{ return JSON.parse(localStorage.getItem('erp_timetable')||'null')||DEFAULT_TIMETABLE; }
+  catch(e){ return DEFAULT_TIMETABLE; }
+}
+
+function getStudentClass(){
+  try{
+    var p=JSON.parse(localStorage.getItem('erp_student_profile')||'null');
+    if(p && p.class){
+      // Extract number from "Class 10" or "10"
+      var m=String(p.class).match(/\d+/);
+      return m?m[0]:null;
+    }
+  }catch(e){}
+  return null;
+}
+
+window.stuRenderTimetable=function(){
+  var cls=getStudentClass();
+  var badgeEl=document.getElementById('ttClassBadge');
+  var bodyEl=document.getElementById('stuTimetableBody');
+  var noClassEl=document.getElementById('ttNoClass');
+  var todayChipEl=document.getElementById('ttTodayChip');
+  var tbl=document.querySelector('.timetable-wrapper');
+
+  if(!cls){
+    if(badgeEl)badgeEl.textContent='No class set';
+    if(tbl)tbl.style.display='none';
+    if(noClassEl)noClassEl.style.display='block';
+    return;
+  }
+  if(tbl)tbl.style.display='';
+  if(noClassEl)noClassEl.style.display='none';
+
+  var data=getStoredTimetable();
+  var classData=data[cls];
+  if(!classData){
+    // Try to find nearest class
+    var keys=Object.keys(data);
+    classData=data[keys[keys.length-1]];
+  }
+
+  if(badgeEl)badgeEl.textContent='Class '+cls;
+
+  var todayDay=new Date().getDay(); // 0=Sun
+  var todayName=DAYS[DAY_JS.indexOf(todayDay)]; // e.g. 'Mon', null on weekend
+  var dayLabel=todayName?DAY_FULL[todayName]:'Weekend';
+  if(todayChipEl)todayChipEl.textContent='Today: '+(todayName?DAY_FULL[todayName]:'Weekend 🎉');
+
+  var html='';
+  DAYS.forEach(function(day){
+    var periods=classData[day]||['—','—','—','—','—','—','—'];
+    var isToday=day===todayName;
+    html+='<tr'+(isToday?' class="today-row"':'')+'>';
+    html+='<td>'+(isToday?'<span style="display:inline-flex;flex-direction:column;align-items:center;gap:2px;"><span>'+DAY_FULL[day]+'</span><span style="font-size:.62rem;background:#2a7abf;color:#fff;border-radius:10px;padding:1px 6px;">Today</span></span>':DAY_FULL[day])+'</td>';
+    periods.forEach(function(subj,idx){
+      if(subj==='—'){
+        html+='<td class="lunch-cell"><span class="tt-cell" style="color:#ea580c;font-weight:700;">Lunch</span></td>';
+      } else {
+        html+='<td><span class="tt-cell">'+subj+'</span></td>';
+      }
+    });
+    html+='</tr>';
+  });
+  if(bodyEl)bodyEl.innerHTML=html;
+};
+
+/* Trigger render when timetable section becomes visible */
+var ttSec=document.getElementById('section-timetable');
+if(ttSec){
+  new MutationObserver(function(){
+    if(!ttSec.classList.contains('hidden')) stuRenderTimetable();
+  }).observe(ttSec,{attributes:true,attributeFilter:['class']});
+}
+
+/* Also update timetable after profile is saved (class may change) */
+var origSaveProfileStu=window.saveProfile;
+if(typeof origSaveProfileStu==='function'){
+  window.saveProfile=function(){
+    origSaveProfileStu.apply(this,arguments);
+    stuRenderTimetable();
+  };
+}
+
+})();
+</script>
+
+<!-- ═══════════════════════════════════════════════════════════
+     HOLIDAY CALENDAR ENGINE
+     ════════════════════════════════════════════════════════ -->
+<script>
+(function(){
+
+var NATIONAL={
+  '01-26':'Republic Day 🇮🇳',
+  '08-15':'Independence Day 🇮🇳',
+  '10-02':'Gandhi Jayanti',
+  '01-01':'New Year\'s Day',
+  '05-01':'Labour Day / May Day',
+  '12-25':'Christmas Day 🎄',
+};
+
+var FLOATING={
+  '2025-01-14':'Makar Sankranti / Pongal',
+  '2025-02-26':'Maha Shivaratri',
+  '2025-03-14':'Holi',
+  '2025-03-30':'Ugadi / Gudi Padwa',
+  '2025-04-06':'Ram Navami',
+  '2025-04-10':'Mahavir Jayanti',
+  '2025-04-14':'Dr. B.R. Ambedkar Jayanti',
+  '2025-04-18':'Good Friday',
+  '2025-05-12':'Buddha Purnima',
+  '2025-06-07':'Eid ul-Adha (Bakrid)',
+  '2025-07-06':'Muharram',
+  '2025-08-16':'Janmashtami',
+  '2025-09-05':'Milad-un-Nabi',
+  '2025-10-20':'Diwali (Lakshmi Puja)',
+  '2025-11-05':'Guru Nanak Jayanti',
+  // Odisha
+  '2025-01-15':'Makar Sankranti ',
+  '2025-04-01':'Utkal Divas (Odisha Day) 🏛',
+  '2025-04-14':'Maha Vishuva Sankranti ',
+  '2025-07-11':'Rath Yatra 🛕',
+  '2025-08-07':'Gamha Purnima',
+  '2025-09-02':'Nuakhai ',
+  '2025-10-02':'Kumar Purnima',
+  // 2026
+  '2026-02-15':'Maha Shivaratri',
+  '2026-03-03':'Holi',
+  '2026-03-19':'Ugadi / Gudi Padwa',
+  '2026-03-26':'Ram Navami',
+  '2026-04-02':'Mahavir Jayanti',
+  '2026-04-03':'Good Friday',
+  '2026-04-14':'Dr. B.R. Ambedkar Jayanti',
+  '2026-05-01':'Buddha Purnima',
+  '2026-06-27':'Eid ul-Adha (Bakrid)',
+  '2026-07-17':'Muharram',
+  '2026-08-05':'Janmashtami',
+  '2026-09-25':'Milad-un-Nabi',
+  '2026-10-19':'Dussehra (Vijayadashami)',
+  '2026-11-07':'Diwali (Lakshmi Puja)',
+  '2026-11-25':'Guru Nanak Jayanti',
+  '2026-12-25':'Christmas Day 🎄',
+  // Odisha 2026
+  '2026-01-14':'Makar Sankranti / Pongal',
+  '2026-04-01':'Utkal Divas (Odisha Day) 🏛',
+  '2026-07-01':'Rath Yatra  🛕',
+  '2026-08-17':'Gamha Purnima',
+  '2026-09-20':'Nuakhai',
+};
+
+var SCHOOL_HOLS=[
+  {month:'04',day:'01',name:'School Foundation Day 🏫'},
+  {month:'06',day:'15',name:'Summer Break Ends'},
+  {month:'10',day:'24',name:'Children\'s Day Celebration'},
+  {month:'12',day:'24',name:'Christmas Holidays Begin'},
+  {month:'01',day:'26',name:'Republic Day Celebration'},
+];
+
+var TYPE_COLOR={national:'#e74c3c',state:'#1a5ec9',school:'#1a8a4a',custom:'#b07c00'};
+var TYPE_BG={national:'#fdecea',state:'#e8f0fe',school:'#e8faf0',custom:'#fff8e1'};
+var TYPE_LABEL={national:'National',state:'Odisha',school:'School',custom:'Custom'};
+
+var today=new Date();
+var calY=today.getFullYear();
+var calM=today.getMonth();
+
+function getHolMap(y,m){
+  var map={};
+  // Fixed national
+  Object.keys(NATIONAL).forEach(function(mmdd){
+    map[y+'-'+mmdd]={name:NATIONAL[mmdd],type:'national'};
+  });
+  // Floating
+  Object.keys(FLOATING).forEach(function(date){
+    var fy=parseInt(date.split('-')[0]);
+    if(fy===y){
+      var n=FLOATING[date];
+      var isState=(n.indexOf('Odisha')>-1||n.indexOf('Rath')>-1||n.indexOf('Nuakhai')>-1||n.indexOf('Utkal')>-1||n.indexOf('Gamha')>-1||n.indexOf('Kumar')>-1||n.indexOf('Makar Sankranti (')>-1||n.indexOf('Vishuva')>-1);
+      map[date]={name:n,type:isState?'state':'national'};
+    }
+  });
+  // School holidays
+  SCHOOL_HOLS.forEach(function(h){
+    var key=y+'-'+h.month+'-'+h.day;
+    map[key]={name:h.name,type:'school'};
+  });
+  // Admin-added custom holidays (shared localStorage key)
+  try{
+    var custom=JSON.parse(localStorage.getItem('erp_holidays')||'[]');
+    custom.forEach(function(h){if(h.date)map[h.date]={name:h.name,type:h.type||'custom'};});
+  }catch(e){}
+  return map;
+}
+
+function stuCalRender(){
+  var MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
+  var headEl=document.getElementById('stuCalHeading');
+  var gridEl=document.getElementById('stuCalGrid');
+  var listEl=document.getElementById('stuCalHolList');
+  if(!headEl)return;
+
+  headEl.textContent=MONTHS[calM]+' '+calY;
+  var holMap=getHolMap(calY,calM);
+  var firstDay=new Date(calY,calM,1).getDay();
+  var daysInMonth=new Date(calY,calM+1,0).getDate();
+  var todayStr=calY+'-'+String(calM+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0');
+  var isCurrentMonth=(today.getFullYear()===calY && today.getMonth()===calM);
+
+  var html='';
+  for(var i=0;i<firstDay;i++) html+='<div></div>';
+  for(var d=1;d<=daysInMonth;d++){
+    var mm=String(calM+1).padStart(2,'0');
+    var dd=String(d).padStart(2,'0');
+    var key=calY+'-'+mm+'-'+dd;
+    var hol=holMap[key];
+    var dow=new Date(calY,calM,d).getDay();
+    var isSun=(dow===0), isSat=(dow===6);
+    var isToday=(key===todayStr);
+
+    var bg='transparent',
+        color=isSun?'#e74c3c':isSat?'#1a8a4a':'#1a3c5e',
+        border='none', fw='500', dot='';
+
+    if(isToday){ bg='#1a3c5e';color='#fff';fw='800'; }
+    else if(hol){ bg=TYPE_BG[hol.type]||'#fff8e1';color=TYPE_COLOR[hol.type]||'#b07c00';border='1.5px solid '+(TYPE_COLOR[hol.type]||'#b07c00');fw='700'; }
+
+    if(hol&&!isToday) dot='<div style="width:4px;height:4px;border-radius:50%;background:'+(TYPE_COLOR[hol.type]||'#b07c00')+';margin:2px auto 0;"></div>';
+
+    var title=hol?hol.name:'';
+    html+='<div class="cal-day-cell" title="'+title+'" style="background:'+bg+';color:'+color+';border:'+border+';font-weight:'+fw+';">'
+         +d+dot+'</div>';
+  }
+  if(gridEl) gridEl.innerHTML=html;
+
+  // Holiday list
+  var mm2=String(calM+1).padStart(2,'0');
+  var monthHols=Object.keys(holMap)
+    .filter(function(k){ return k.startsWith(calY+'-'+mm2); })
+    .sort()
+    .map(function(k){ return [k,holMap[k]]; });
+
+  if(!monthHols.length){
+    if(listEl) listEl.innerHTML='<div style="text-align:center;color:#aab4c2;font-size:.8rem;padding:16px 0;">No holidays this month 🎉</div>';
+    return;
+  }
+  if(listEl) listEl.innerHTML=monthHols.map(function(entry){
+    var date=entry[0], h=entry[1];
+    var label=new Date(date+'T00:00:00').toLocaleDateString('en-IN',{day:'numeric',weekday:'short'});
+    var col=TYPE_COLOR[h.type]||'#b07c00';
+    var bg=TYPE_BG[h.type]||'#fff8e1';
+    var badge=TYPE_LABEL[h.type]||'Custom';
+    return '<div class="cal-hol-item" style="background:'+bg+';">'
+          +'<div class="cal-hol-date" style="color:'+col+';">'+label+'</div>'
+          +'<div class="cal-hol-name">'+h.name+'</div>'
+          +'<div class="cal-hol-badge" style="background:'+col+';">'+badge+'</div>'
+          +'</div>';
+  }).join('');
+}
+
+window.stuCalPrev=function(){ calM--;if(calM<0){calM=11;calY--;}stuCalRender(); };
+window.stuCalNext=function(){ calM++;if(calM>11){calM=0;calY++;}stuCalRender(); };
+
+/* Render when section becomes visible */
+var holSec=document.getElementById('section-holidays');
+if(holSec){
+  new MutationObserver(function(){
+    if(!holSec.classList.contains('hidden')) stuCalRender();
+  }).observe(holSec,{attributes:true,attributeFilter:['class']});
+}
+
+})();
+</script>
+</body>
+</html>
