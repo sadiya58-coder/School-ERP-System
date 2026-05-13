@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>EduCore ERP – School Management System</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/home.css">
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="navbar" id="navbar">
+  <div class="nav-container">
+    <div class="logo">
+      <span class="logo-icon"></span>
+      <span class="logo-text">EduCore<span class="accent">ERP</span></span>
+    </div>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="#features">Features</a></li>
+      <li><a href="#services">Services</a></li>
+      <li><a href="#about">About</a></li>
+      <li><a href="login.html" class="btn-login">Login</a></li>
+    </ul>
+    <div class="hamburger" id="hamburger">&#9776;</div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero" id="home">
+  <div class="hero-bg">
+    <img src="images/home.jpg" alt="Classroom" class="hero-img" onerror="this.style.display='none'">
+    <div class="hero-overlay"></div>
+  </div>
+  <div class="hero-content">
+    
+    <h1 class="hero-title animate-fade-up delay-1">
+      School ERP<br><span class="hero-accent">Software</span>
+    </h1>
+    <p class="hero-subtitle animate-fade-up delay-2">
+      The complete digital management platform for modern schools — students, staff, fees, exams & more, all in one place.
+    </p>
+    <div class="hero-actions animate-fade-up delay-3">
+      <a href="login.html" class="btn-primary">Register Now &rarr;</a>
+      <a href="#features" class="btn-ghost">See Features</a>
+    </div>
+    <div class="hero-stats animate-fade-up delay-4">
+      <div class="stat"><span class="stat-num" data-target="10000" data-suffix="K+" data-divisor="1000">0</span><span>Students</span></div>
+      <div class="stat-divider"></div>
+      <div class="stat"><span class="stat-num" data-target="500" data-suffix="+">0</span><span>Schools</span></div>
+      <div class="stat-divider"></div>
+      <div class="stat"><span class="stat-num" data-target="99.9" data-suffix="%" data-decimal="1">0</span><span>Uptime</span></div>
+    </div>
+  </div>
+  <div class="hero-scroll">
+
+    <div class="scroll-line"></div>
+  </div>
+</section>
+
+<!-- SERVICES -->
+<section class="services" id="features">
+  <div class="container">
+    
+    <h2 class="section-title">Everything Your School Needs</h2>
+    <p class="section-sub">A unified platform to manage every aspect of your institution efficiently.</p>
+
+    <div class="services-grid">
+      <div class="service-card animate-card">
+        <div class="service-icon">💰</div>
+        <h3>Income & Expense</h3>
+        <p>Track all financial transactions with daily/monthly reports and analytics.</p>
+        <ul class="service-list">
+          <li>✔ Add income & expense records</li>
+          <li>✔ Monthly financial reports</li>
+          <li>✔ Admin-only access</li>
+        </ul>
+      </div>
+      <div class="service-card animate-card">
+        <div class="service-icon">💳</div>
+        <h3>Fees Collection</h3>
+        <p>Manage student fee payments, track pending dues, generate receipts.</p>
+        <ul class="service-list">
+          <li>✔ Record fee payments</li>
+          <li>✔ Paid / pending status</li>
+          <li>✔ PDF receipts</li>
+        </ul>
+      </div>
+      <div class="service-card animate-card">
+        <div class="service-icon">👨‍🎓</div>
+        <h3>Student Management</h3>
+        <p>Complete student database with class, section, and contact management.</p>
+        <ul class="service-list">
+          <li>✔ Add / edit / delete students</li>
+          <li>✔ Class & section mapping</li>
+          <li>✔ Contact directory</li>
+        </ul>
+      </div>
+      <div class="service-card animate-card">
+        <div class="service-icon">📄</div>
+        <h3>ID & Marksheet</h3>
+        <p>Generate ID cards, admit cards and marksheets, downloadable as PDF.</p>
+        <ul class="service-list">
+          <li>✔ Student ID cards</li>
+          <li>✔ Exam admit cards</li>
+          <li>✔ Marksheet with grades</li>
+        </ul>
+      </div>
+      <div class="service-card animate-card">
+        <div class="service-icon">👩‍🏫</div>
+        <h3>Staff Management</h3>
+        <p>Manage all staff with roles, subjects and class assignments.</p>
+        <ul class="service-list">
+          <li>✔ Teacher & admin roles</li>
+          <li>✔ Subject assignment</li>
+          <li>✔ Staff directory</li>
+        </ul>
+      </div>
+      <div class="service-card animate-card">
+        <div class="service-icon">📝</div>
+        <h3>Homework & Assignments</h3>
+        <p>Teachers upload, students view — seamless assignment management.</p>
+        <ul class="service-list">
+          <li>✔ Upload assignments</li>
+          <li>✔ Due date tracking</li>
+          <li>✔ Download materials</li>
+        </ul>
+      </div>
+      <div class="service-card animate-card">
+        <div class="service-icon">🚌</div>
+        <h3>Bus Live Tracking</h3>
+        <p>Real-time school bus tracking with route information and alerts.</p>
+        <ul class="service-list">
+          <li>✔ Live map view</li>
+          <li>✔ Route details</li>
+          <li>✔ ETA alerts</li>
+        </ul>
+      </div>
+      <div class="service-card animate-card">
+        <div class="service-icon">💬</div>
+        <h3>Chat & Notifications</h3>
+        <p>In-app messaging between teachers and students with smart alerts.</p>
+        <ul class="service-list">
+          <li>✔ Teacher ↔ Student chat</li>
+          <li>✔ Fee due alerts</li>
+          <li>✔ Announcements</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- BUS TRACKING PROMO -->
+<section class="promo-section" id="services">
+  <div class="container promo-inner">
+    <div class="promo-text">
+      <div class="section-label">Live Tracking</div>
+      <h2>Know Where Your<br>School Bus Is, <span class="accent-text">Always</span></h2>
+      <p>Real-time GPS tracking for all school buses. Parents receive instant alerts when the bus is near their stop. Administrators get full fleet visibility.</p>
+      <ul class="promo-list">
+        <li>🗺️ Live map with bus markers</li>
+        <li>📍 Route history & stops</li>
+        <li>🔔 Push notifications to parents</li>
+        <li>📊 Driver & trip reports</li>
+      </ul>
+    
+    </div>
+    <div class="bus-container">
+  <div class="road-line"></div>
+
+  <div class="bus-wrapper">
+    <div class="bus">🚌
+    
+    </div>
+    <div class="live-text">Live Bus Tracking</div>
+  </div>
+</div>
+          
+      
+    
+  </div>
+</section>
+
+<!-- DASHBOARD PREVIEW -->
+<section class="dashboard-preview" id="about">
+  <div class="container">
+    
+    <h2 class="section-title">Dashboards Tailored for Everyone</h2>
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="admin">👑 Admin</button>
+      <button class="tab-btn" data-tab="teacher">👩‍🏫 Teacher</button>
+      <button class="tab-btn" data-tab="student">👨‍🎓 Student</button>
+    </div>
+    <div class="tab-content" id="admin">
+      <div class="dash-preview admin-dash">
+        <div class="dash-cards">
+          <div class="dash-card"><div class="dc-icon">👨‍🎓</div><div class="dc-val">1,248</div><div class="dc-label">Total Students</div></div>
+          <div class="dash-card"><div class="dc-icon">👩‍🏫</div><div class="dc-val">84</div><div class="dc-label">Staff Members</div></div>
+          <div class="dash-card"><div class="dc-icon">💰</div><div class="dc-val">₹4.2L</div><div class="dc-label">Monthly Income</div></div>
+          <div class="dash-card"><div class="dc-icon">💳</div><div class="dc-val">92%</div><div class="dc-label">Fee Collection</div></div>
+        </div>
+        <div class="dash-desc">Full financial oversight, user management, school analytics and system configuration.</div>
+      </div>
+    </div>
+    <div class="tab-content hidden" id="teacher">
+      <div class="dash-preview teacher-dash">
+        <div class="dash-cards">
+          <div class="dash-card"><div class="dc-icon">📚</div><div class="dc-val">3</div><div class="dc-label">Assigned Classes</div></div>
+          <div class="dash-card"><div class="dc-icon">📝</div><div class="dc-val">12</div><div class="dc-label">Assignments Posted</div></div>
+          <div class="dash-card"><div class="dc-icon">👩‍🎓</div><div class="dc-val">86</div><div class="dc-label">My Students</div></div>
+          <div class="dash-card"><div class="dc-icon">💬</div><div class="dc-val">5</div><div class="dc-label">New Messages</div></div>
+        </div>
+        <div class="dash-desc">Upload homework, view student lists, post announcements and manage exam results.</div>
+      </div>
+    </div>
+    <div class="tab-content hidden" id="student">
+      <div class="dash-preview student-dash">
+        <div class="dash-cards">
+          <div class="dash-card"><div class="dc-icon">📖</div><div class="dc-val">4</div><div class="dc-label">Due Assignments</div></div>
+          <div class="dash-card"><div class="dc-icon">💳</div><div class="dc-val">Paid</div><div class="dc-label">Fee Status</div></div>
+          <div class="dash-card"><div class="dc-icon">📊</div><div class="dc-val">A+</div><div class="dc-label">Last Grade</div></div>
+          <div class="dash-card"><div class="dc-icon">🔔</div><div class="dc-val">3</div><div class="dc-label">Notifications</div></div>
+        </div>
+        <div class="dash-desc">View assignments, download marksheets, check fee status and chat with teachers.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section">
+  <div class="cta-bg"></div>
+  <div class="container cta-inner">
+    <h2>Ready to Transform Your School?</h2>
+    <p>Join 500+ schools already using EduCore ERP to simplify management.</p>
+    <a href="pages/login.html" class="btn-primary btn-large">Get Started Free &rarr;</a>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <div class="container footer-inner">
+    <div class="footer-brand">
+      <span class="logo-icon"></span>
+      <span class="logo-text">EduCore<span class="accent">ERP</span></span>
+      <p>Complete School Management Software</p>
+    </div>
+    <div class="footer-links">
+      <h4>Features</h4>
+      <a href="#">Student Management</a>
+      <a href="#">Fee Collection</a>
+      <a href="#">Bus Tracking</a>
+      <a href="#">Marksheets</a>
+    </div>
+    <div class="footer-links">
+      <h4>Roles</h4>
+      <a href="pages/login.html">Admin Login</a>
+      <a href="pages/login.html">Teacher Login</a>
+      <a href="pages/login.html">Student Login</a>
+    </div>
+    <div class="footer-links">
+      <h4>Contact</h4>
+      <a href="#">support@educoreerp.in</a>
+      <a href="#">+91 98765 43210</a>
+    </div>
+  </div>
+  <div class="footer-bottom">© 2025 EduCore ERP. All rights reserved.</div>
+</footer>
+
+<script src="js/home.js"></script>
+<script>
+  (function () {
+    function animateCounter(el) {
+      const target   = parseFloat(el.dataset.target);
+      const suffix   = el.dataset.suffix || '';
+      const divisor  = parseFloat(el.dataset.divisor) || 1;
+      const decimals = parseInt(el.dataset.decimal) || 0;
+      const duration = 900; // ms
+      const steps    = 60;
+      const interval = duration / steps;
+      let current    = 0;
+      const increment = target / steps;
+
+      const timer = setInterval(() => {
+        current += increment;
+        if (current >= target) {
+          current = target;
+          clearInterval(timer);
+        }
+        const display = divisor > 1
+          ? (current / divisor).toFixed(decimals)
+          : current.toFixed(decimals);
+        el.textContent = display + suffix;
+      }, interval);
+    }
+
+    // Trigger when stats come into view
+    const stats = document.querySelectorAll('.stat-num[data-target]');
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          animateCounter(entry.target);
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.5 });
+
+    stats.forEach(el => observer.observe(el));
+  })();
+</script>
+
+</body>
+</html>
